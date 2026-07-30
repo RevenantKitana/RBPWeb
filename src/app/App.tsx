@@ -55,15 +55,7 @@ const discoveredBackgrounds: BackgroundAsset[] = Object.entries(backgroundAssetM
   })
   .filter((asset): asset is BackgroundAsset => asset !== null);
 
-const fallbackBackgrounds: BackgroundAsset[] = [
-  {
-    type: "video",
-    src: resolvePublicAssetUrl("/background/sunset-deltarune.1920x1080.mp4"),
-    name: formatDisplayName("sunset-deltarune.1920x1080.mp4"),
-  },
-];
-
-const availableBackgrounds: BackgroundAsset[] = discoveredBackgrounds.length > 0 ? discoveredBackgrounds : fallbackBackgrounds;
+const availableBackgrounds: BackgroundAsset[] = discoveredBackgrounds;
 
 const bgmAssetModules = import.meta.glob("../../public/audio/bgm/*", { eager: true, import: "default" }) as Record<string, string>;
 const discoveredBgmTracks: BgmTrackOption[] = Object.entries(bgmAssetModules)

@@ -1,5 +1,3 @@
-export const sleep = (ms: number) => new Promise<void>((res) => setTimeout(res, ms));
-
 export const unsplash = (id: string, w = 800, h = 500) =>
   `https://images.unsplash.com/${id}?w=${w}&h=${h}&fit=crop&auto=format`;
 
