@@ -51,10 +51,12 @@ export function ContactSection({ lang }: { lang: Lang }) {
                 { icon: Youtube, label: "YouTube", href: "https://www.youtube.com/@revekitana" },
                 { icon: Facebook, label: "Facebook", href: "https://www.facebook.com/JinguKitana" },
               ] as const
-            ).map(({ icon: Icon, label }) => (
+            ).map(({ icon: Icon, label, href }) => (
               <a
                 key={label}
-                href="#"
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label={label}
                 className="w-11 h-11 rounded-xl border border-border bg-white/[0.03] flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/30 transition-all"
               >
