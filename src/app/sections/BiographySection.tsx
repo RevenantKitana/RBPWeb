@@ -17,7 +17,7 @@ export function BiographySection({ lang }: { lang: Lang }) {
             <div className="relative rounded-3xl overflow-hidden bg-muted" style={{ aspectRatio: "3/4" }}>
               <img
                 src={unsplash("photo-1562070299-9932d68ca9c6", 700, 920)}
-                alt="Nguyen Minh Khoa"
+                alt="Nguyen Quoc Khanh - Revek"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#08080f]/60 to-transparent" />

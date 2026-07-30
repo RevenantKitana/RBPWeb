@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Menu, X, Volume2 } from "lucide-react";
+import { ImageIcon, Menu, Music4, X, Volume2 } from "lucide-react";
 import type { Lang } from "@/app/types";
-import { T, BGM_TRACKS } from "@/app/data/content";
+import { T } from "@/app/data/content";
 
 export function Navbar({
   lang,
@@ -10,16 +10,48 @@ export function Navbar({
   musicOn,
   setMusicOn,
   activeSection,
+  availableBackgrounds,
+  selectedBackground,
+  onBackgroundChange,
+  availableBgmTracks,
+  selectedBgm,
+  onBgmChange,
+  currentBgmTitle,
 }: {
   lang: Lang;
   setLang: (l: Lang) => void;
   musicOn: boolean;
   setMusicOn: (v: boolean) => void;
   activeSection: string;
+  availableBackgrounds: Array<{ type: "image" | "video"; src: string; name: string }>;
+  selectedBackground: string | null;
+  onBackgroundChange: (value: string | null) => void;
+  availableBgmTracks: Array<{ src: string; name: string }>;
+  selectedBgm: string | null;
+  onBgmChange: (value: string | null) => void;
+  currentBgmTitle: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [bgMenuOpen, setBgMenuOpen] = useState(false);
+  const [bgmMenuOpen, setBgmMenuOpen] = useState(false);
+  const bgMenuRef = useRef<HTMLDivElement | null>(null);
+  const bgmMenuRef = useRef<HTMLDivElement | null>(null);
   const t = T[lang];
-  const bgmTrack = BGM_TRACKS[0];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (bgMenuRef.current && !bgMenuRef.current.contains(target)) {
+        setBgMenuOpen(false);
+      }
+      if (bgmMenuRef.current && !bgmMenuRef.current.contains(target)) {
+        setBgmMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const scrollTo = (id: string) => {
     setMenuOpen(false);
@@ -37,7 +69,7 @@ export function Navbar({
             className="text-foreground hover:text-primary transition-colors text-lg tracking-wide"
             style={{ fontFamily: '"Gilda Display", serif' }}
           >
-            MK<span className="text-primary">.</span>
+            Q.K<span className="text-primary">.</span>
           </button>
 
           <nav className="hidden md:flex items-center gap-5">
@@ -57,6 +89,81 @@ export function Navbar({
           </nav>
 
           <div className="flex items-center gap-2">
+            <div className="relative" ref={bgMenuRef}>
+              <button
+                onClick={() => setBgMenuOpen((prev) => !prev)}
+                className="h-9 min-w-[72px] px-3 flex items-center justify-center gap-2 border border-border hover:border-primary/40 rounded-lg transition-all"
+                aria-label="Select background"
+                title="Background"
+              >
+                <ImageIcon size={14} className="text-muted-foreground" />
+                <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                  BG
+                </span>
+              </button>
+
+              <AnimatePresence>
+                {bgMenuOpen ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-11 z-[60] min-w-[220px] rounded-xl border border-white/10 bg-[#08080f]/95 p-2 shadow-xl backdrop-blur"
+                  >
+                    {availableBackgrounds.map((asset) => (
+                      <button
+                        key={asset.src}
+                        onClick={() => {
+                          onBackgroundChange(asset.src);
+                          setBgMenuOpen(false);
+                        }}
+                        className={`mt-1 w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${selectedBackground === asset.src ? "bg-primary/15 text-primary" : "text-foreground/80 hover:bg-white/5"}`}
+                      >
+                        {asset.name}
+                      </button>
+                    ))}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+
+            <div className="relative" ref={bgmMenuRef}>
+              <button
+                onClick={() => setBgmMenuOpen((prev) => !prev)}
+                className="w-9 h-9 flex items-center justify-center border border-border hover:border-primary/40 rounded-lg transition-all"
+                aria-label="Select background music"
+                title={currentBgmTitle || "Background music"}
+              >
+                <Music4 size={15} className="text-muted-foreground" />
+              </button>
+
+              <AnimatePresence>
+                {bgmMenuOpen ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-11 z-[60] min-w-[220px] rounded-xl border border-white/10 bg-[#08080f]/95 p-2 shadow-xl backdrop-blur"
+                  >
+                    {availableBgmTracks.map((track) => (
+                      <button
+                        key={track.src}
+                        onClick={() => {
+                          onBgmChange(track.src);
+                          setBgmMenuOpen(false);
+                        }}
+                        className={`mt-1 w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${selectedBgm === track.src ? "bg-primary/15 text-primary" : "text-foreground/80 hover:bg-white/5"}`}
+                      >
+                        {track.name}
+                      </button>
+                    ))}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+
             <button
               onClick={() => setLang(lang === "en" ? "vi" : "en")}
               className="font-mono text-xs text-muted-foreground hover:text-foreground border border-border hover:border-primary/40 px-2.5 py-1.5 rounded-lg transition-all"
@@ -68,7 +175,7 @@ export function Navbar({
               onClick={() => setMusicOn(!musicOn)}
               className="w-9 h-9 flex items-center justify-center border border-border hover:border-primary/40 rounded-lg transition-all"
               aria-label="Toggle ambient music"
-              title={bgmTrack ? `${musicOn ? "Đang phát" : "BGM"}: ${bgmTrack.title}` : "BGM"}
+              title={currentBgmTitle ? `${musicOn ? "Đang phát" : "BGM"}: ${currentBgmTitle}` : "BGM"}
             >
               {musicOn ? (
                 <div className="flex items-end gap-[2px] h-4">

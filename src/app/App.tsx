@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Lang } from "@/app/types";
 import { Navbar } from "@/app/components/shared/Navbar";
 import { AUDIO_PLAY_REQUEST } from "@/app/components/shared/AudioPlayer";
@@ -11,13 +11,114 @@ import { BiographySection } from "@/app/sections/BiographySection";
 import { ContactSection } from "@/app/sections/ContactSection";
 import { BGM_TRACKS } from "@/app/data/content";
 
+type BackgroundAsset = {
+  type: "image" | "video";
+  src: string;
+  name: string;
+};
+
+type BgmTrackOption = {
+  src: string;
+  name: string;
+};
+
+const resolvePublicAssetUrl = (assetPath: string) => {
+  const normalizedPath = assetPath.startsWith("/") ? assetPath : `/${assetPath}`;
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+  return `${basePath}${normalizedPath}`.replace(/\/+/g, "/");
+};
+
+const formatDisplayName = (name: string) => {
+  const withoutExtension = name.replace(/\.[^/.]+$/, "");
+  return withoutExtension
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const backgroundAssetModules = import.meta.glob("../../public/background/*", { eager: true, import: "default" }) as Record<string, string>;
+const discoveredBackgrounds: BackgroundAsset[] = Object.entries(backgroundAssetModules)
+  .map(([path, src]) => {
+    const name = path.split("/").pop() ?? "";
+    const normalizedSrc = src.replace(/^\/public\//, "/");
+
+    if (/\.(mp4|webm|ogg|mov)$/i.test(name)) {
+      return { type: "video" as const, src: resolvePublicAssetUrl(normalizedSrc), name: formatDisplayName(name) };
+    }
+
+    if (/\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(name)) {
+      return { type: "image" as const, src: resolvePublicAssetUrl(normalizedSrc), name: formatDisplayName(name) };
+    }
+
+    return null;
+  })
+  .filter((asset): asset is BackgroundAsset => asset !== null);
+
+const fallbackBackgrounds: BackgroundAsset[] = [
+  {
+    type: "video",
+    src: resolvePublicAssetUrl("/background/sunset-deltarune.1920x1080.mp4"),
+    name: formatDisplayName("sunset-deltarune.1920x1080.mp4"),
+  },
+];
+
+const availableBackgrounds: BackgroundAsset[] = discoveredBackgrounds.length > 0 ? discoveredBackgrounds : fallbackBackgrounds;
+
+const bgmAssetModules = import.meta.glob("../../public/audio/bgm/*", { eager: true, import: "default" }) as Record<string, string>;
+const discoveredBgmTracks: BgmTrackOption[] = Object.entries(bgmAssetModules)
+  .map(([path, src]) => {
+    const name = path.split("/").pop() ?? "";
+    const normalizedSrc = src.replace(/^\/public\//, "/");
+
+    if (/\.(mp3|m4a|wav|ogg|aac|flac)$/i.test(name)) {
+      return { src: resolvePublicAssetUrl(normalizedSrc), name: formatDisplayName(name) };
+    }
+
+    return null;
+  })
+  .filter((asset): asset is BgmTrackOption => asset !== null)
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+const fallbackBgmTracks: BgmTrackOption[] = BGM_TRACKS.filter(Boolean).map((track) => ({
+  src: resolvePublicAssetUrl(track.src),
+  name: formatDisplayName(track.title),
+}));
+
+const availableBgmTracks: BgmTrackOption[] = discoveredBgmTracks.length > 0 ? discoveredBgmTracks : fallbackBgmTracks;
+
 export default function App() {
   const [lang, setLang] = useState<Lang>("en");
   const [musicOn, setMusicOn] = useState(true);
   const [activeSection, setActiveSection] = useState("hero");
+  const [selectedBackground, setSelectedBackground] = useState<string | null>(availableBackgrounds[0]?.src ?? null);
+  const [selectedBgm, setSelectedBgm] = useState<string | null>(() => {
+    const randomTrack = availableBgmTracks[Math.floor(Math.random() * availableBgmTracks.length)];
+    return randomTrack?.src ?? null;
+  });
   const audioRef = useRef<HTMLAudioElement>(null);
-  const bgmTrack = BGM_TRACKS[0];
   const resumeBgmTimeout = useRef<number | null>(null);
+  const intentionalPauseRef = useRef(false);
+  const backgroundAsset = selectedBackground
+    ? availableBackgrounds.find((asset) => asset.src === selectedBackground) ?? availableBackgrounds[0] ?? null
+    : availableBackgrounds[0] ?? null;
+  const currentBgmTrack = useMemo(() => {
+    const selectedTrack = availableBgmTracks.find((track) => track.src === selectedBgm);
+    if (selectedTrack) {
+      return { src: selectedTrack.src, title: selectedTrack.name };
+    }
+
+    if (availableBgmTracks[0]) {
+      return { src: availableBgmTracks[0].src, title: availableBgmTracks[0].name };
+    }
+
+    const fallbackTrack = BGM_TRACKS[0];
+    if (fallbackTrack) {
+      return { src: fallbackTrack.src, title: fallbackTrack.title };
+    }
+
+    return null;
+  }, [availableBgmTracks, selectedBgm]);
 
   useEffect(() => {
     const savedLang = localStorage.getItem("lang") as Lang | null;
@@ -35,6 +136,39 @@ export default function App() {
   const handleSetMusic = (on: boolean) => {
     setMusicOn(on);
     localStorage.setItem("musicOn", String(on));
+
+    if (!on) {
+      intentionalPauseRef.current = true;
+      audioRef.current?.pause();
+    } else {
+      intentionalPauseRef.current = false;
+    }
+  };
+
+  const scheduleBgmResume = () => {
+    if (resumeBgmTimeout.current) {
+      window.clearTimeout(resumeBgmTimeout.current);
+    }
+
+    resumeBgmTimeout.current = window.setTimeout(() => {
+      if (!musicOn || intentionalPauseRef.current || document.visibilityState === "hidden") return;
+      void playBgm();
+    }, 250);
+  };
+
+  const playBgm = async () => {
+    const el = audioRef.current;
+    if (!el || !currentBgmTrack || !musicOn || document.visibilityState === "hidden") return;
+    if (intentionalPauseRef.current) return;
+    if (!el.paused) return;
+
+    try {
+      el.volume = 1;
+      el.muted = false;
+      await el.play();
+    } catch {
+      scheduleBgmResume();
+    }
   };
 
   useEffect(() => {
@@ -44,6 +178,7 @@ export default function App() {
       if (!el) return;
       if (detail?.element === el) return;
       if (detail?.source === "audio" || detail?.source === "youtube") {
+        intentionalPauseRef.current = true;
         if (!el.paused) el.pause();
 
         if (resumeBgmTimeout.current) {
@@ -58,51 +193,68 @@ export default function App() {
 
   useEffect(() => {
     const el = audioRef.current;
-    if (!el || !bgmTrack) return;
+    if (!el || !currentBgmTrack) return;
 
-    el.src = bgmTrack.src;
+    const handlePause = () => {
+      if (!musicOn || intentionalPauseRef.current || document.visibilityState === "hidden") return;
+      scheduleBgmResume();
+    };
+
+    const currentSrc = el.src;
+    const nextSrc = currentBgmTrack.src;
+
+    if (currentSrc !== nextSrc) {
+      el.src = nextSrc;
+      el.load();
+    }
+
     el.loop = true;
-    el.load();
+    el.addEventListener("pause", handlePause);
 
     if (musicOn) {
+      intentionalPauseRef.current = false;
       window.dispatchEvent(new CustomEvent(AUDIO_PLAY_REQUEST, { detail: { source: "audio", element: el } }));
-
-      const startPlayback = async () => {
-        try {
-          el.muted = true;
-          await el.play();
-          el.muted = false;
-        } catch {
-          try {
-            el.muted = true;
-            await el.play();
-          } catch {
-            // autoplay may still be blocked by the browser; the user gesture fallback below will handle it
-          }
-        }
-      };
-
-      void startPlayback();
+      void playBgm();
     } else {
+      intentionalPauseRef.current = true;
       el.pause();
     }
-  }, [bgmTrack, musicOn]);
+
+    return () => {
+      el.removeEventListener("pause", handlePause);
+    };
+  }, [currentBgmTrack?.src, musicOn]);
 
   useEffect(() => {
-    if (!musicOn || !bgmTrack) return;
+    if (!musicOn || !currentBgmTrack) return;
 
     const el = audioRef.current;
     if (!el) return;
 
     const unlockPlayback = () => {
       if (el.paused) {
-        el.muted = false;
-        void el.play().catch(() => {});
+        intentionalPauseRef.current = false;
+        void playBgm();
       }
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        intentionalPauseRef.current = false;
+        void playBgm();
+      }
+    };
+
+    const onFocus = () => {
+      intentionalPauseRef.current = false;
+      void playBgm();
     };
 
     window.addEventListener("pointerdown", unlockPlayback);
     window.addEventListener("keydown", unlockPlayback);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("pageshow", onFocus);
 
     if (resumeBgmTimeout.current) {
       window.clearTimeout(resumeBgmTimeout.current);
@@ -110,8 +262,8 @@ export default function App() {
 
     resumeBgmTimeout.current = window.setTimeout(() => {
       if (!el.paused) return;
-      el.muted = false;
-      void el.play().catch(() => {});
+      intentionalPauseRef.current = false;
+      void playBgm();
     }, 3000);
 
     return () => {
@@ -120,8 +272,11 @@ export default function App() {
       }
       window.removeEventListener("pointerdown", unlockPlayback);
       window.removeEventListener("keydown", unlockPlayback);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("pageshow", onFocus);
     };
-  }, [bgmTrack, musicOn]);
+  }, [currentBgmTrack, musicOn]);
 
   useEffect(() => {
     const ids = ["hero", "about", "software", "music", "articles", "biography", "contact"];
@@ -144,36 +299,61 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="fixed inset-0 -z-10">
-        <img
-          src="https://images.unsplash.com/photo-1588312744377-2adfb7b8578a?w=1920&h=1080&fit=crop&auto=format"
-          alt=""
-          aria-hidden="true"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#08080f]/88 via-[#08080f]/72 to-[#08080f]" />
+    <div className="relative min-h-screen bg-background text-foreground isolate">
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        {backgroundAsset?.type === "video" ? (
+          <video
+            src={backgroundAsset.src}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : backgroundAsset ? (
+          <img
+            src={backgroundAsset.src}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
+        {backgroundAsset ? (
+          <>
+            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(8,8,15,0.78)_0%,rgba(8,8,15,0.6)_45%,rgba(8,8,15,0.85)_100%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,168,83,0.16),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(95,134,160,0.16),transparent_35%)]" />
+          </>
+        ) : null}
       </div>
 
-      <Navbar
-        lang={lang}
-        setLang={handleSetLang}
-        musicOn={musicOn}
-        setMusicOn={handleSetMusic}
-        activeSection={activeSection}
-      />
+      <div className="relative z-10">
+        <Navbar
+          lang={lang}
+          setLang={handleSetLang}
+          musicOn={musicOn}
+          setMusicOn={handleSetMusic}
+          activeSection={activeSection}
+          availableBackgrounds={availableBackgrounds}
+          selectedBackground={selectedBackground}
+          onBackgroundChange={setSelectedBackground}
+          availableBgmTracks={availableBgmTracks}
+          selectedBgm={selectedBgm}
+          onBgmChange={setSelectedBgm}
+          currentBgmTitle={currentBgmTrack?.title ?? "BGM"}
+        />
 
-      <audio ref={audioRef} preload="auto" className="hidden" />
+        <audio ref={audioRef} preload="auto" className="hidden" />
 
-      <main className="pt-16">
-        <HeroSection lang={lang} />
-        <AboutSection lang={lang} />
-        <SoftwareSection lang={lang} />
-        <MusicSection lang={lang} />
-        <ArticlesSection lang={lang} />
-        <BiographySection lang={lang} />
-        <ContactSection lang={lang} />
-      </main>
+        <main className="pt-16">
+          <HeroSection lang={lang} />
+          <AboutSection lang={lang} />
+          <SoftwareSection lang={lang} />
+          <MusicSection lang={lang} />
+          <ArticlesSection lang={lang} />
+          <BiographySection lang={lang} />
+          <ContactSection lang={lang} />
+        </main>
+      </div>
     </div>
   );
 }

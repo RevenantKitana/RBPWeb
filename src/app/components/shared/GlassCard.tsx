@@ -12,9 +12,9 @@ export function GlassCard({
 } & HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`bg-white/[0.04] backdrop-blur-md border border-white/[0.08] rounded-2xl ${
+      className={`bg-[rgba(10,12,22,0.78)] backdrop-blur-xl border border-white/[0.14] rounded-2xl shadow-[0_12px_38px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.08)] ${
         hover
-          ? "hover:bg-white/[0.07] hover:border-white/[0.14] transition-all duration-300"
+          ? "hover:bg-[rgba(14,16,28,0.86)] hover:border-white/[0.2] transition-all duration-300"
           : ""
       } ${className}`}
       {...props}

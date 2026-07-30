@@ -19,21 +19,21 @@ export function HeroSection({ lang }: { lang: Lang }) {
           <div className="w-24 h-24 mx-auto mb-8 rounded-full overflow-hidden ring-2 ring-primary/30 ring-offset-4 ring-offset-[#08080f]">
             <img
               src={unsplash("photo-1562070299-9932d68ca9c6", 200, 200)}
-              alt="Nguyen Minh Khoa"
+              alt="Nguyen Quoc Khanh - Revek"
               className="w-full h-full object-cover"
             />
           </div>
         </FadeIn>
 
         <FadeIn delay={0.1}>
-          <p className="font-mono text-xs tracking-[0.3em] text-primary uppercase mb-3">
+          <p className="font-mono text-xs tracking-[0.3em] text-primary/95 uppercase mb-3 [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]">
             {t.greeting}
           </p>
         </FadeIn>
 
         <FadeIn delay={0.18}>
           <h1
-            className="text-5xl md:text-7xl text-foreground mb-4 leading-none tracking-tight"
+            className="text-5xl md:text-7xl text-foreground/95 mb-4 leading-none tracking-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]"
             style={{ fontFamily: '"Cormorant Garamond", "Palatino Linotype", "Times New Roman", serif' }}
           >
             {t.name}
@@ -41,13 +41,13 @@ export function HeroSection({ lang }: { lang: Lang }) {
         </FadeIn>
 
         <FadeIn delay={0.26}>
-          <p className="text-muted-foreground text-base md:text-lg mb-5 font-light">
+          <p className="text-muted-foreground/95 text-base md:text-lg mb-5 font-light">
             {t.role}
           </p>
         </FadeIn>
 
         <FadeIn delay={0.34}>
-          <p className="text-foreground/65 text-sm md:text-base max-w-lg mx-auto leading-relaxed mb-10">
+          <p className="text-foreground/90 text-sm md:text-base max-w-lg mx-auto leading-relaxed mb-10 [text-shadow:0_1px_2px_rgba(0,0,0,0.28)]">
             {t.intro}
           </p>
         </FadeIn>
@@ -56,19 +56,19 @@ export function HeroSection({ lang }: { lang: Lang }) {
           <div className="flex flex-wrap gap-3 justify-center">
             <button
               onClick={() => scrollTo("software")}
-              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
+              className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-[0_12px_30px_rgba(0,0,0,0.25)]"
             >
               {t.btnProjects}
             </button>
             <a
-              href="#"
-              className="px-6 py-2.5 bg-white/[0.06] border border-white/[0.12] text-foreground/80 rounded-xl text-sm font-medium hover:bg-white/[0.1] transition-colors flex items-center gap-2"
+              href="https://drive.google.com/drive/folders/1ib3nmsbPNqaFF4pI3NY7iWDVRXbjGnYw?usp=sharing"
+              className="px-6 py-2.5 bg-white/[0.08] border border-white/[0.16] text-foreground/95 rounded-xl text-sm font-medium hover:bg-white/[0.12] transition-colors flex items-center gap-2 shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
             >
               {t.btnCV}
             </a>
             <button
               onClick={() => scrollTo("contact")}
-              className="px-6 py-2.5 border border-border text-foreground/65 rounded-xl text-sm font-medium hover:border-primary/40 hover:text-foreground/85 transition-all"
+              className="px-6 py-2.5 border border-border text-foreground/90 rounded-xl text-sm font-medium hover:border-primary/40 hover:text-foreground/95 transition-all shadow-[0_8px_24px_rgba(0,0,0,0.16)]"
             >
               {t.btnContact}
             </button>
