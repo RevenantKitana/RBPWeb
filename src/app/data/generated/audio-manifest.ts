@@ -29,5 +29,15 @@ export const AUDIO_MANIFEST: AudioManifestEntry[] = [
     "kind": "bgm",
     "fileName": "Dragon Traveler - Game Soundtrack 2.mp3",
     "src": "/audio/bgm/Dragon Traveler - Game Soundtrack 2.mp3"
+  },
+  {
+    "kind": "bgm",
+    "fileName": "Nor SoundTrack - ParishChurch.mp3",
+    "src": "/audio/bgm/Nor SoundTrack - ParishChurch.mp3"
+  },
+  {
+    "kind": "bgm",
+    "fileName": "ThornSin SoundTrack - Serrect Passage (Orchestral Version).mp3",
+    "src": "/audio/bgm/ThornSin SoundTrack - Serrect Passage (Orchestral Version).mp3"
   }
 ];

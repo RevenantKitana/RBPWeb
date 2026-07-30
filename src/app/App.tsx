@@ -120,6 +120,19 @@ export default function App() {
     return null;
   }, [availableBgmTracks, selectedBgm]);
 
+  const ensureBgmSource = () => {
+    const el = audioRef.current;
+    if (!el || !currentBgmTrack) return;
+
+    const nextSrc = currentBgmTrack.src;
+    const loadedSrc = el.getAttribute("data-src");
+    if (loadedSrc === nextSrc) return;
+
+    el.src = nextSrc;
+    el.load();
+    el.setAttribute("data-src", nextSrc);
+  };
+
   useEffect(() => {
     const savedLang = localStorage.getItem("lang") as Lang | null;
     if (savedLang === "en" || savedLang === "vi") {
@@ -140,8 +153,14 @@ export default function App() {
     if (!on) {
       intentionalPauseRef.current = true;
       audioRef.current?.pause();
-    } else {
-      intentionalPauseRef.current = false;
+      return;
+    }
+
+    intentionalPauseRef.current = false;
+    if (document.visibilityState !== "hidden") {
+      window.setTimeout(() => {
+        void playBgm();
+      }, 0);
     }
   };
 
@@ -161,6 +180,8 @@ export default function App() {
     if (!el || !currentBgmTrack || !musicOn || document.visibilityState === "hidden") return;
     if (intentionalPauseRef.current) return;
     if (!el.paused) return;
+
+    ensureBgmSource();
 
     try {
       el.volume = 1;
@@ -200,21 +221,12 @@ export default function App() {
       scheduleBgmResume();
     };
 
-    const currentSrc = el.src;
-    const nextSrc = currentBgmTrack.src;
-
-    if (currentSrc !== nextSrc) {
-      el.src = nextSrc;
-      el.load();
-    }
-
     el.loop = true;
     el.addEventListener("pause", handlePause);
 
     if (musicOn) {
       intentionalPauseRef.current = false;
       window.dispatchEvent(new CustomEvent(AUDIO_PLAY_REQUEST, { detail: { source: "audio", element: el } }));
-      void playBgm();
     } else {
       intentionalPauseRef.current = true;
       el.pause();
@@ -232,10 +244,9 @@ export default function App() {
     if (!el) return;
 
     const unlockPlayback = () => {
-      if (el.paused) {
-        intentionalPauseRef.current = false;
-        void playBgm();
-      }
+      if (document.visibilityState === "hidden") return;
+      intentionalPauseRef.current = false;
+      void playBgm();
     };
 
     const onVisibilityChange = () => {
@@ -252,19 +263,10 @@ export default function App() {
 
     window.addEventListener("pointerdown", unlockPlayback);
     window.addEventListener("keydown", unlockPlayback);
+    window.addEventListener("touchstart", unlockPlayback);
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("focus", onFocus);
     window.addEventListener("pageshow", onFocus);
-
-    if (resumeBgmTimeout.current) {
-      window.clearTimeout(resumeBgmTimeout.current);
-    }
-
-    resumeBgmTimeout.current = window.setTimeout(() => {
-      if (!el.paused) return;
-      intentionalPauseRef.current = false;
-      void playBgm();
-    }, 3000);
 
     return () => {
       if (resumeBgmTimeout.current) {
@@ -272,6 +274,7 @@ export default function App() {
       }
       window.removeEventListener("pointerdown", unlockPlayback);
       window.removeEventListener("keydown", unlockPlayback);
+      window.removeEventListener("touchstart", unlockPlayback);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("pageshow", onFocus);
@@ -308,6 +311,7 @@ export default function App() {
             loop
             muted
             playsInline
+            preload="none"
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : backgroundAsset ? (
@@ -315,6 +319,8 @@ export default function App() {
             src={backgroundAsset.src}
             alt=""
             aria-hidden="true"
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : null}
@@ -342,7 +348,7 @@ export default function App() {
           currentBgmTitle={currentBgmTrack?.title ?? "BGM"}
         />
 
-        <audio ref={audioRef} preload="auto" className="hidden" />
+        <audio ref={audioRef} preload="none" className="hidden" />
 
         <main className="pt-16">
           <HeroSection lang={lang} />
