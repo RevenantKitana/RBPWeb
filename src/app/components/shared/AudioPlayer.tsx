@@ -86,6 +86,8 @@ export function AudioPlayer({
   album?: string;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const pendingPlayRef = useRef(false);
+  const [audioReady, setAudioReady] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [resolvedDuration, setResolvedDuration] = useState(duration);
@@ -95,14 +97,21 @@ export function AudioPlayer({
 
   const toggle = async () => {
     const el = audioRef.current;
-    if (!el) return;
 
     if (playing) {
-      el.pause();
+      el?.pause();
       setPlaying(false);
       setProgress(0);
       return;
     }
+
+    if (!audioReady) {
+      pendingPlayRef.current = true;
+      setAudioReady(true);
+      return;
+    }
+
+    if (!el) return;
 
     window.dispatchEvent(new CustomEvent(AUDIO_PLAY_REQUEST, { detail: { source: "audio", element: el } }));
 
@@ -115,6 +124,8 @@ export function AudioPlayer({
   };
 
   useEffect(() => {
+    if (!audioReady) return;
+
     const el = audioRef.current;
     if (!el) return;
 
@@ -165,18 +176,36 @@ export function AudioPlayer({
     el.addEventListener("ended", onEnd);
     el.addEventListener("timeupdate", onTime);
 
+    if (pendingPlayRef.current) {
+      pendingPlayRef.current = false;
+      window.dispatchEvent(new CustomEvent(AUDIO_PLAY_REQUEST, { detail: { source: "audio", element: el } }));
+
+      void el.play()
+        .then(() => {
+          if (!cancelled) {
+            setPlaying(true);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setPlaying(false);
+          }
+        });
+    }
+
     return () => {
       cancelled = true;
+      pendingPlayRef.current = false;
       window.removeEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
       el.removeEventListener("loadedmetadata", onLoadedMetadata);
       el.removeEventListener("ended", onEnd);
       el.removeEventListener("timeupdate", onTime);
     };
-  }, [src]);
+  }, [audioReady, src]);
 
   return (
     <GlassCard className="flex gap-4 p-4 items-center" hover>
-      <audio ref={audioRef} src={src} preload="none" />
+      {audioReady ? <audio ref={audioRef} src={src} preload="none" /> : null}
       <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
         <img src={unsplash(imgId, 96, 96)} alt={title} className="w-full h-full object-cover" />
       </div>
