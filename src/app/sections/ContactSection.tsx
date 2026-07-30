@@ -1,4 +1,4 @@
-import { Check, Copy, Globe, Github, Linkedin, Mail, Music, Youtube } from "lucide-react";
+import { Check, Copy, Globe, Github, Linkedin, Mail, Music, Youtube, Facebook } from "lucide-react";
 import { useState } from "react";
 import type { Lang } from "@/app/types";
 import { FadeIn } from "@/app/components/shared/FadeIn";
@@ -47,11 +47,9 @@ export function ContactSection({ lang }: { lang: Lang }) {
           <div className="flex justify-center gap-3 mb-10">
             {(
               [
-                { icon: Github, label: "GitHub" },
-                { icon: Linkedin, label: "LinkedIn" },
-                { icon: Youtube, label: "YouTube" },
-                { icon: Music, label: "SoundCloud" },
-                { icon: Globe, label: "Website" },
+                { icon: Github, label: "GitHub", href: "https://github.com/RevenantKitana" },
+                { icon: Youtube, label: "YouTube", href: "https://www.youtube.com/@revekitana" },
+                { icon: Facebook, label: "Facebook", href: "https://www.facebook.com/JinguKitana" },
               ] as const
             ).map(({ icon: Icon, label }) => (
               <a
@@ -86,7 +84,7 @@ export function ContactSection({ lang }: { lang: Lang }) {
 
         <FadeIn delay={0.3}>
           <p className="mt-16 font-mono text-[10px] text-muted-foreground/40 tracking-wider">
-            © 2025 Nguyen Minh Khoa · Built with React + Tailwind CSS
+            © 2025 Khanh V. Quoc Nguyen. All rights reserved. | Designed & Built by Revek
           </p>
         </FadeIn>
       </div>

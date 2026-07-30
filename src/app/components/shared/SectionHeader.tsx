@@ -11,7 +11,9 @@ export function SectionHeader({
 }) {
   return (
     <div className={`mb-16 ${align === "center" ? "text-center" : ""}`}>
-      <p className="font-mono text-xs tracking-[0.25em] text-primary uppercase mb-3">
+      <p
+        className="font-mono text-[11px] sm:text-xs tracking-[0.24em] text-primary/85 uppercase mb-3 leading-relaxed"
+      >
         {sub}
       </p>
       <h2

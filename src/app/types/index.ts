@@ -36,12 +36,26 @@ export interface SkillGroup {
 
 export interface Project {
   title: string;
+  titleVi?: string;
+  titleEn?: string;
   summary: string;
+  summaryVi?: string;
+  summaryEn?: string;
+  details?: string[];
+  detailsVi?: string[];
+  detailsEn?: string[];
+  highlights?: string[];
+  highlightsVi?: string[];
+  highlightsEn?: string[];
   tech: string[];
   role: string;
+  roleVi?: string;
+  roleEn?: string;
   github: string;
   demo: string | null;
   architecture: string;
+  architectureVi?: string;
+  architectureEn?: string;
   imgId: string;
 }
 
@@ -60,6 +74,8 @@ export interface AudioDemo {
   duration: string;
   src: string;
   imgId: string;
+  artist?: string;
+  album?: string;
 }
 
 export interface BgmTrack {
@@ -68,6 +84,8 @@ export interface BgmTrack {
   duration: string;
   src: string;
   imgId: string;
+  artist?: string;
+  album?: string;
 }
 
 export interface YoutubeCard {
@@ -92,7 +110,7 @@ export interface ResourceItem {
 
 export interface ArticleItem {
   title: string;
-  category: string;
+  category?: string;
   date: string;
   excerpt: string;
   readTime: number;

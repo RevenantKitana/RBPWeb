@@ -1,14 +1,5 @@
 import type { AudioDemo, BgmTrack, YoutubeCard, ResourceItem } from "@/app/types";
-
-const demoAudioEntries = import.meta.glob("/public/audio/demo/*.mp3", {
-  eager: true,
-  import: "default",
-}) as Record<string, string>;
-
-const bgmAudioEntries = import.meta.glob("/public/audio/bgm/*.mp3", {
-  eager: true,
-  import: "default",
-}) as Record<string, string>;
+import { AUDIO_MANIFEST } from "@/app/data/generated/audio-manifest";
 
 const fallbackImageIds = [
   "photo-1763771757355-d2a395b5f8ea",
@@ -25,20 +16,20 @@ function formatTrackTitle(fileName: string) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-function createTrackList(entries: Record<string, string>, kind: "demo" | "bgm") {
-  return Object.entries(entries)
-    .map(([path, src], index) => ({
-      title: formatTrackTitle(path.split("/").pop() ?? "Untitled"),
+function createTrackListFromManifest(kind: "demo" | "bgm") {
+  return AUDIO_MANIFEST.filter((entry) => entry.kind === kind)
+    .map((entry, index) => ({
+      title: formatTrackTitle(entry.fileName),
       genre: kind === "bgm" ? "BGM" : "Demo",
       duration: "Loading...",
-      src,
+      src: entry.src,
       imgId: fallbackImageIds[index % fallbackImageIds.length],
     }))
     .sort((a, b) => a.title.localeCompare(b.title));
 }
 
-export const AUDIO_DEMOS: AudioDemo[] = createTrackList(demoAudioEntries, "demo") as AudioDemo[];
-export const BGM_TRACKS: BgmTrack[] = createTrackList(bgmAudioEntries, "bgm") as BgmTrack[];
+export const AUDIO_DEMOS: AudioDemo[] = createTrackListFromManifest("demo");
+export const BGM_TRACKS: BgmTrack[] = createTrackListFromManifest("bgm");
 
 export const YOUTUBE_CARDS: YoutubeCard[] = [
   {
@@ -47,22 +38,22 @@ export const YOUTUBE_CARDS: YoutubeCard[] = [
     link: "https://youtu.be/LchDM0V_jJU?si=WuT1V0iks2UOFTDH",
   },
   {
-    title: "Midnight Circuit — Full Album Playthrough",
-    description: "A full playthrough of the Midnight Circuit project with atmosphere, arrangement, and textures.",
-    link: "https://www.youtube.com/watch?v=ScMzIvxBSi4",
+    title: "LO NGƯỜI ƯỚT ÁO (Revek Remix · Chill House)",
+    description: "Anh nói thương em vậy mà !?? | Sigma Meow xin được đồng hành cùng anh em...",
+    link: "https://youtu.be/b5mrEG2wM3k?si=8O6CP8ISAJ5svOcy",
   },
   {
-    title: "My FL Studio Setup Tour & Workflow 2024",
-    description: "A short setup tour showing the tools, plugins, and workflow used in the current production process.",
-    link: "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+    title: "E Là Không Thể (Revek Remix · Chill House)",
+    description: "⚠️ CẢNH BÁO: Đây không phải bản gốc! Hãy ủng hộ nghệ sĩ chính chủ để tôn trọng chất xám và công sức của họ ❤️",
+    link: "https://youtu.be/zWCRRNawiyU?si=NXrOyRHAlMYgvLPz",
+  },
+  {
+    title: "Tây Tiến - Vidic X HTropix (Revek Bootleg Mix)",
+    description: "Official Music Video: Tây Tiến - Vidic X HTropix | Khi Văn Học Thành Bài Hát Siêu Hay",
+    link: "https://youtu.be/b-WXQHRbo9Y?si=5dklRZzgVoQDWCbd",
   },
 ];
 
 export const RESOURCES: ResourceItem[] = [
-  { title: "Midnight Circuit — FLP", type: "FLP", desc: "Full FL Studio project with all plugins listed.", link: "#" },
-  { title: "Wabi-Sabi Drum Kit", type: "WAV", desc: "24 acoustic one-shots processed with tape saturation.", link: "#" },
-  { title: "EchoVault STEMS", type: "STEMS", desc: "Isolated drums, bass, synths, and FX from the EP.", link: "#" },
-  { title: "Lo-fi Chord Progressions", type: "MIDI", desc: "20 jazz-influenced lo-fi chord progressions in all keys.", link: "#" },
-  { title: "KHOAWAVE Presets Vol. 1", type: "PRESET", desc: "40 Serum + Vital pads, leads, and textures.", link: "#" },
-  { title: "City Tape Sample Pack", type: "PACK", desc: "Urban field recordings from Hanoi mixed with percussion.", link: "#" },
+  { title: "Completed SoundTracks Pack by Revek", type: "PACK", desc: "Free audio wav files", link: "https://drive.google.com/drive/folders/1H_yDAdX_YQbsu8UoG5y4Ti-qok9cBhPK?usp=drive_link" },
 ];

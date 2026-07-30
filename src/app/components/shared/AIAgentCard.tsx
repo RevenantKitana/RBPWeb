@@ -186,7 +186,8 @@ export function AIAgentCard({ lang }: { lang: Lang }) {
   const currentIdx = stageOrder.indexOf(stage as AIStepKey);
 
   return (
-    <GlassCard className="p-6 flex flex-col h-full min-h-0">
+    <div id="ai-trigger-demo" className="scroll-mt-24">
+      <GlassCard className="p-6 flex flex-col h-full min-h-0">
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-1">
           <Bot size={15} className="text-primary" />
@@ -322,6 +323,7 @@ export function AIAgentCard({ lang }: { lang: Lang }) {
           </>
         )}
       </button>
-    </GlassCard>
+      </GlassCard>
+    </div>
   );
 }

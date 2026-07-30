@@ -106,7 +106,7 @@ export function MusicSection({ lang }: { lang: Lang }) {
                     className="text-2xl text-primary"
                     style={{ fontFamily: '"Gilda Display", serif' }}
                   >
-                    KHOAWAVE
+                    REVEK
                   </p>
                 </div>
                 <div>
@@ -115,11 +115,9 @@ export function MusicSection({ lang }: { lang: Lang }) {
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      "Lo-fi",
-                      "Cinematic",
-                      "Electronic",
-                      "Neo-Soul",
-                      "Ambient",
+                      "Deep House",
+                      "Electro Dance Music",
+                      "Melodic House",
                     ].map((g) => (
                       <span
                         key={g}
@@ -135,16 +133,15 @@ export function MusicSection({ lang }: { lang: Lang }) {
                     {t.dawLabel}
                   </p>
                   <p className="text-sm text-foreground/80">FL Studio 21</p>
-                  <p className="text-sm text-foreground/80">Ableton Live 11</p>
                 </div>
                 <div>
                   <p className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase mb-2">
                     {t.rolesLabel}
                   </p>
                   {[
-                    "Composer",
+                    "Arranger/Beatmaker",
                     "Sound Designer",
-                    "Mix Engineer",
+                    "Mixing/Mastering Engineer",
                   ].map((r) => (
                     <p key={r} className="text-sm text-foreground/80">
                       {r}
@@ -162,13 +159,19 @@ export function MusicSection({ lang }: { lang: Lang }) {
               {t.audioTitle}
             </p>
           </FadeIn>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {AUDIO_DEMOS.map((demo, i) => (
-              <FadeIn key={demo.title} delay={i * 0.08}>
-                <AudioPlayer {...demo} />
-              </FadeIn>
-            ))}
-          </div>
+          {AUDIO_DEMOS.length === 0 ? (
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-8 text-sm text-muted-foreground">
+              No audio demos available.
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {AUDIO_DEMOS.map((demo, i) => (
+                <FadeIn key={demo.title} delay={i * 0.08}>
+                  <AudioPlayer {...demo} />
+                </FadeIn>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="mb-16">

@@ -136,7 +136,7 @@ export function AboutSection({ lang }: { lang: Lang }) {
                   </motion.div>
                 </AnimatePresence>
                 {quoteEntries.length > 1 ? (
-                  <p className="mt-4 text-[11px] text-muted-foreground/80">Nhấp để xem câu trích khác</p>
+                  <p className="mt-4 text-[11px] text-muted-foreground/80">More</p>
                 ) : null}
               </GlassCard>
             </FadeIn>
@@ -158,7 +158,7 @@ export function AboutSection({ lang }: { lang: Lang }) {
                   </motion.div>
                 </AnimatePresence>
                 {bioEntries.length > 1 ? (
-                  <p className="mt-4 text-[11px] text-muted-foreground/80">Nhấp để xem thêm thông tin</p>
+                  <p className="mt-4 text-[11px] text-muted-foreground/80">More</p>
                 ) : null}
               </GlassCard>
             </FadeIn>
