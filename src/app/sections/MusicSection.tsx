@@ -36,6 +36,7 @@ type YouTubePlayerInstance = {
   pauseVideo: () => void;
   stopVideo: () => void;
   loadVideoById: (videoId: string, startSeconds?: number) => void;
+  cueVideoById: (videoId: string, startSeconds?: number) => void;
   getPlayerState: () => number;
   destroy: () => void;
 };
@@ -124,7 +125,7 @@ export function MusicSection({ lang }: { lang: Lang }) {
       if (!window.YT?.Player || !iframeRef.current) return;
 
       if (youtubePlayerRef.current) {
-        youtubePlayerRef.current.loadVideoById(activeVideo.videoId);
+        youtubePlayerRef.current.cueVideoById(activeVideo.videoId);
         return;
       }
 
@@ -134,13 +135,15 @@ export function MusicSection({ lang }: { lang: Lang }) {
           rel: 0,
           modestbranding: 1,
           playsinline: 1,
+          autoplay: 0,
+          controls: 1,
         },
         events: {
           onReady: () => {
-            youtubePlayerRef.current?.loadVideoById(activeVideo.videoId);
+            youtubePlayerRef.current?.cueVideoById(activeVideo.videoId);
           },
           onStateChange: (event) => {
-            if (event.data === 1) {
+            if (event.data === window.YT?.PlayerState?.PLAYING) {
               window.dispatchEvent(new CustomEvent(AUDIO_PLAY_REQUEST, { detail: { source: "youtube" } }));
             }
           },
@@ -305,6 +308,8 @@ export function MusicSection({ lang }: { lang: Lang }) {
                       if (player) {
                         try {
                           player.stopVideo();
+                          player.cueVideoById(video.videoId);
+                          player.playVideo();
                         } catch {
                           // ignore if the player is not ready yet
                         }
