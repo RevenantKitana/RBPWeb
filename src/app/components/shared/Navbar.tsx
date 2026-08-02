@@ -109,7 +109,7 @@ export function Navbar({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 6 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-11 z-[60] min-w-[220px] rounded-xl border border-white/10 bg-[#08080f]/95 p-2 shadow-xl backdrop-blur"
+                    className="absolute right-0 top-11 z-[60] min-w-[220px] max-h-[280px] overflow-y-auto rounded-xl border border-white/10 bg-[#08080f]/95 p-2 shadow-xl backdrop-blur"
                   >
                     {availableBackgrounds.map((asset) => (
                       <button
@@ -145,7 +145,7 @@ export function Navbar({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 6 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-11 z-[60] min-w-[220px] rounded-xl border border-white/10 bg-[#08080f]/95 p-2 shadow-xl backdrop-blur"
+                    className="absolute right-0 top-11 z-[60] min-w-[220px] max-h-[280px] overflow-y-auto rounded-xl border border-white/10 bg-[#08080f]/95 p-2 shadow-xl backdrop-blur"
                   >
                     {availableBgmTracks.map((track) => (
                       <button
