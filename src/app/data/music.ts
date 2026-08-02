@@ -43,6 +43,11 @@ export const YOUTUBE_CARDS: YoutubeCard[] = [
     description: "Official Music Video: Tây Tiến - Vidic X HTropix | Khi Văn Học Thành Bài Hát Siêu Hay",
     link: "https://youtu.be/b-WXQHRbo9Y?si=5dklRZzgVoQDWCbd",
   },
+  {
+    title: "Thay tôi yêu cô ấy (Revek Remix · Chill House)",
+    description: "Ngày hôm nay Kim Liên muốn đi để mua 1 bó hoa (cần)...",
+    link: "https://youtu.be/n30C0MYqcE8?si=Yob2B4sP0uQcPW0f",
+  }
 ];
 
 export const RESOURCES: ResourceItem[] = [

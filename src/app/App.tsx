@@ -111,6 +111,24 @@ export default function App() {
     }
   };
 
+  const handleBgmChange = (value: string | null) => {
+    setSelectedBgm(value);
+
+    if (!musicOn) {
+      handleSetMusic(true);
+      return;
+    }
+
+    const el = audioRef.current;
+    const nextTrack = availableBgmTracks.find((track) => track.src === value);
+    if (!el || !nextTrack) return;
+
+    el.src = nextTrack.src;
+    el.load();
+    el.setAttribute("data-src", nextTrack.src);
+    void el.play().catch(() => undefined);
+  };
+
   const scheduleBgmResume = () => {
     if (resumeBgmTimeout.current) {
       window.clearTimeout(resumeBgmTimeout.current);
@@ -291,7 +309,7 @@ export default function App() {
           onBackgroundChange={setSelectedBackground}
           availableBgmTracks={availableBgmTracks}
           selectedBgm={selectedBgm}
-          onBgmChange={setSelectedBgm}
+          onBgmChange={handleBgmChange}
           currentBgmTitle={currentBgmTrack?.title ?? "BGM"}
         />
 
