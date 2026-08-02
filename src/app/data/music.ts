@@ -10,15 +10,13 @@ const fallbackImageIds = [
 function createTrackListFromAssets(kind: "demo" | "bgm") {
   const mediaKind = kind === "bgm" ? "audio-bgm" : "audio-demo";
 
-  return getMediaAssets(mediaKind)
-    .map((asset, index) => ({
-      title: asset.name,
-      genre: kind === "bgm" ? "BGM" : "Demo",
-      duration: "Loading...",
-      src: asset.src,
-      imgId: fallbackImageIds[index % fallbackImageIds.length],
-    }))
-    .sort((a, b) => a.title.localeCompare(b.title));
+  return getMediaAssets(mediaKind).map((asset, index) => ({
+    title: asset.name,
+    genre: kind === "bgm" ? "BGM" : "Demo",
+    duration: "Loading...",
+    src: asset.src,
+    imgId: fallbackImageIds[index % fallbackImageIds.length],
+  }));
 }
 
 export const AUDIO_DEMOS: AudioDemo[] = createTrackListFromAssets("demo");

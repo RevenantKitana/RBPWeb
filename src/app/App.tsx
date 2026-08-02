@@ -36,7 +36,7 @@ const discoveredBgmTracks: BgmTrackOption[] = getMediaAssets("audio-bgm").map((a
 }));
 
 const availableBgmTracks: BgmTrackOption[] = discoveredBgmTracks.length > 0
-  ? discoveredBgmTracks.sort((a, b) => a.name.localeCompare(b.name))
+  ? discoveredBgmTracks
   : [];
 
 export default function App() {
