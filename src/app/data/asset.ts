@@ -14,9 +14,9 @@ const MEDIA_SOURCE_PATHS = [
 // Backgrounds
   "/background/ThornSin%20Flower.jpg",
   "/background/Thornsin%20BG%202.jpg",
-  "/background/ThornSin%20BG%203.jpg",
-  "/background/ThornSin%20BG%204.jpg",
-  "/background/ThornSin%20BG%205.jpg",
+  "/background/Thornsin%20BG%203.jpg",
+  "/background/Thornsin%20BG%204.jpg",
+  "/background/Thornsin%20BG%205.jpg",
   "/background/ThornSin%20BG%206.jpg",
   "/background/ThornSin%20BG%207.jpg",
   "/background/sunset-deltarune.mp4",
