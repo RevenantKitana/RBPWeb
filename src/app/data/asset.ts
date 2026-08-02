@@ -11,10 +11,16 @@ export interface MediaAsset {
 const R2_BASE_URL = import.meta.env.VITE_R2_BASE_URL
 
 const MEDIA_SOURCE_PATHS = [
-  "/bg/AA%20ThornSin(1).jpg",
+// Backgrounds
+  "/background/AA%20ThornSin(1).jpg",
+  "/background/Breeze%20Slime%20-%20Dragon%20Traveler.mp4",
+  "/background/sunset-deltarune.mp4",
+  "/background/%5B16%2B%5D%20Titania%20-%20Dragon%20Traveler.mp4"
+// Demo Audio
   "/audio/demo/revek%20ft%20Thế%20Phương%20-%20Đi%20để%20trở%20về.mp3",
   "/audio/demo/Tai%20sinh%20(Tung%20duong)%20x%20Love%20again%20(alok).mp3",
   "/audio/demo/Thuy%20chung.mp3",
+// BGM Audio
   "/audio/bgm/[Wadanohara%20and%20the%20Great%20Blue%20Sea]%20127%20-%20Honeymoon.mp3",
   "/audio/bgm/Dragon%20Traveler%20-%20Game%20Soundtrack%202.mp3",
   "/audio/bgm/Nor%20SoundTrack%20-%20ParishChurch.mp3",
