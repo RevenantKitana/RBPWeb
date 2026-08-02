@@ -1,5 +1,5 @@
 import type { AudioDemo, BgmTrack, YoutubeCard, ResourceItem } from "@/app/types";
-import { AUDIO_MANIFEST } from "@/app/data/generated/audio-manifest";
+import { getMediaAssets } from "@/app/data/asset";
 
 const fallbackImageIds = [
   "photo-1763771757355-d2a395b5f8ea",
@@ -7,29 +7,22 @@ const fallbackImageIds = [
   "photo-1601042879364-f3947d3f9c16",
 ];
 
-function formatTrackTitle(fileName: string) {
-  return fileName
-    .replace(/\.(mp3|m4a|wav)$/i, "")
-    .replace(/[-_]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
+function createTrackListFromAssets(kind: "demo" | "bgm") {
+  const mediaKind = kind === "bgm" ? "audio-bgm" : "audio-demo";
 
-function createTrackListFromManifest(kind: "demo" | "bgm") {
-  return AUDIO_MANIFEST.filter((entry) => entry.kind === kind)
-    .map((entry, index) => ({
-      title: formatTrackTitle(entry.fileName),
+  return getMediaAssets(mediaKind)
+    .map((asset, index) => ({
+      title: asset.name,
       genre: kind === "bgm" ? "BGM" : "Demo",
       duration: "Loading...",
-      src: entry.src,
+      src: asset.src,
       imgId: fallbackImageIds[index % fallbackImageIds.length],
     }))
     .sort((a, b) => a.title.localeCompare(b.title));
 }
 
-export const AUDIO_DEMOS: AudioDemo[] = createTrackListFromManifest("demo");
-export const BGM_TRACKS: BgmTrack[] = createTrackListFromManifest("bgm");
+export const AUDIO_DEMOS: AudioDemo[] = createTrackListFromAssets("demo");
+export const BGM_TRACKS: BgmTrack[] = createTrackListFromAssets("bgm");
 
 export const YOUTUBE_CARDS: YoutubeCard[] = [
   {

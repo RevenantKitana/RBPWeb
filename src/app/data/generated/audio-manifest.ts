@@ -4,40 +4,4 @@ export interface AudioManifestEntry {
   src: string;
 }
 
-export const AUDIO_MANIFEST: AudioManifestEntry[] = [
-  {
-    "kind": "demo",
-    "fileName": "revek ft Thế Phương - Đi để trở về.mp3",
-    "src": "/audio/demo/revek ft Thế Phương - Đi để trở về.mp3"
-  },
-  {
-    "kind": "demo",
-    "fileName": "Tai sinh (Tung duong) x Love again (alok).mp3",
-    "src": "/audio/demo/Tai sinh (Tung duong) x Love again (alok).mp3"
-  },
-  {
-    "kind": "demo",
-    "fileName": "Thuy chung.mp3",
-    "src": "/audio/demo/Thuy chung.mp3"
-  },
-  {
-    "kind": "bgm",
-    "fileName": "[Wadanohara and the Great Blue Sea] 127 - Honeymoon.mp3",
-    "src": "/audio/bgm/[Wadanohara and the Great Blue Sea] 127 - Honeymoon.mp3"
-  },
-  {
-    "kind": "bgm",
-    "fileName": "Dragon Traveler - Game Soundtrack 2.mp3",
-    "src": "/audio/bgm/Dragon Traveler - Game Soundtrack 2.mp3"
-  },
-  {
-    "kind": "bgm",
-    "fileName": "Nor SoundTrack - ParishChurch.mp3",
-    "src": "/audio/bgm/Nor SoundTrack - ParishChurch.mp3"
-  },
-  {
-    "kind": "bgm",
-    "fileName": "ThornSin SoundTrack - Serrect Passage (Orchestral Version).mp3",
-    "src": "/audio/bgm/ThornSin SoundTrack - Serrect Passage (Orchestral Version).mp3"
-  }
-];
+export const AUDIO_MANIFEST: AudioManifestEntry[] = [];

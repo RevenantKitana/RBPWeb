@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Lang } from "@/app/types";
 import { Navbar } from "@/app/components/shared/Navbar";
 import { AUDIO_PLAY_REQUEST } from "@/app/components/shared/AudioPlayer";
@@ -9,7 +9,9 @@ import { MusicSection } from "@/app/sections/MusicSection";
 import { ArticlesSection } from "@/app/sections/ArticlesSection";
 import { BiographySection } from "@/app/sections/BiographySection";
 import { ContactSection } from "@/app/sections/ContactSection";
-import { getMediaAssets } from "@/app/data/asset";
+import { BGM_TRACKS } from "@/app/data/content";
+import { BACKGROUND_ASSETS } from "@/app/data/media";
+import type { BackgroundAsset } from "@/app/types";
 
 type BackgroundAsset = {
   type: "image" | "video";
@@ -22,22 +24,62 @@ type BgmTrackOption = {
   name: string;
 };
 
-const availableBackgrounds: BackgroundAsset[] = getMediaAssets("background")
-  .filter((asset) => asset.resourceType === "image" || asset.resourceType === "video")
-  .map((asset) => ({
-    type: asset.resourceType === "video" ? "video" : "image",
-    src: asset.src,
-    name: asset.name,
-  }));
+const resolvePublicAssetUrl = (assetPath: string) => {
+  const normalizedPath = assetPath.startsWith("/") ? assetPath : `/${assetPath}`;
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+  return `${basePath}${normalizedPath}`.replace(/\/+/g, "/");
+};
 
-const discoveredBgmTracks: BgmTrackOption[] = getMediaAssets("audio-bgm").map((asset) => ({
-  src: asset.src,
-  name: asset.name,
+const formatDisplayName = (name: string) => {
+  const withoutExtension = name.replace(/\.[^/.]+$/, "");
+  return withoutExtension
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const backgroundAssetModules = import.meta.glob("../../public/background/*", { eager: true, import: "default" }) as Record<string, string>;
+const discoveredBackgrounds: BackgroundAsset[] = Object.entries(backgroundAssetModules)
+  .map(([path, src]) => {
+    const name = path.split("/").pop() ?? "";
+    const normalizedSrc = src.replace(/^\/public\//, "/");
+
+    if (/\.(mp4|webm|ogg|mov)$/i.test(name)) {
+      return { type: "video" as const, src: resolvePublicAssetUrl(normalizedSrc), name: formatDisplayName(name) };
+    }
+
+    if (/\.(jpg|jpeg|png|gif|webp|avif|svg)$/i.test(name)) {
+      return { type: "image" as const, src: resolvePublicAssetUrl(normalizedSrc), name: formatDisplayName(name) };
+    }
+
+    return null;
+  })
+  .filter((asset): asset is BackgroundAsset => asset !== null);
+
+const availableBackgrounds: BackgroundAsset[] = discoveredBackgrounds;
+
+const bgmAssetModules = import.meta.glob("../../public/audio/bgm/*", { eager: true, import: "default" }) as Record<string, string>;
+const discoveredBgmTracks: BgmTrackOption[] = Object.entries(bgmAssetModules)
+  .map(([path, src]) => {
+    const name = path.split("/").pop() ?? "";
+    const normalizedSrc = src.replace(/^\/public\//, "/");
+
+    if (/\.(mp3|m4a|wav|ogg|aac|flac)$/i.test(name)) {
+      return { src: resolvePublicAssetUrl(normalizedSrc), name: formatDisplayName(name) };
+    }
+
+    return null;
+  })
+  .filter((asset): asset is BgmTrackOption => asset !== null)
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+const fallbackBgmTracks: BgmTrackOption[] = BGM_TRACKS.filter(Boolean).map((track) => ({
+  src: resolvePublicAssetUrl(track.src),
+  name: formatDisplayName(track.title),
 }));
 
-const availableBgmTracks: BgmTrackOption[] = discoveredBgmTracks.length > 0
-  ? discoveredBgmTracks.sort((a, b) => a.name.localeCompare(b.name))
-  : [];
+const availableBgmTracks: BgmTrackOption[] = discoveredBgmTracks.length > 0 ? discoveredBgmTracks : fallbackBgmTracks;
 
 export default function App() {
   const [lang, setLang] = useState<Lang>("en");
@@ -62,6 +104,11 @@ export default function App() {
 
     if (availableBgmTracks[0]) {
       return { src: availableBgmTracks[0].src, title: availableBgmTracks[0].name };
+    }
+
+    const fallbackTrack = BGM_TRACKS[0];
+    if (fallbackTrack) {
+      return { src: fallbackTrack.src, title: fallbackTrack.title };
     }
 
     return null;
