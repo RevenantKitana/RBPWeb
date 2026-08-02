@@ -7,6 +7,39 @@ import { SectionHeader } from "@/app/components/shared/SectionHeader";
 import { AudioPlayer, AUDIO_PLAY_REQUEST } from "@/app/components/shared/AudioPlayer";
 import { T, AUDIO_DEMOS, YOUTUBE_CARDS, RESOURCES, RESOURCE_COLORS } from "@/app/data/content";
 
+declare global {
+  interface Window {
+    YT?: {
+      Player: new (
+        element: HTMLElement | null,
+        options: {
+          videoId?: string;
+          playerVars?: Record<string, unknown>;
+          events?: {
+            onReady?: (event: { target: YouTubePlayerInstance }) => void;
+            onStateChange?: (event: { data: number; target: YouTubePlayerInstance }) => void;
+          };
+        }
+      ) => YouTubePlayerInstance;
+      PlayerState?: {
+        PLAYING: number;
+        PAUSED: number;
+        ENDED: number;
+      };
+    };
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+type YouTubePlayerInstance = {
+  playVideo: () => void;
+  pauseVideo: () => void;
+  stopVideo: () => void;
+  loadVideoById: (videoId: string, startSeconds?: number) => void;
+  getPlayerState: () => number;
+  destroy: () => void;
+};
+
 function getYouTubeVideoId(url: string) {
   try {
     const parsed = new URL(url);
@@ -30,6 +63,7 @@ export function MusicSection({ lang }: { lang: Lang }) {
   const t = T[lang].music;
   const [selectedVideo, setSelectedVideo] = useState<YoutubeEmbedState | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const youtubePlayerRef = useRef<YouTubePlayerInstance | null>(null);
 
   const videoCards = useMemo(
     () =>
@@ -55,6 +89,15 @@ export function MusicSection({ lang }: { lang: Lang }) {
 
   useEffect(() => {
     const stopCurrentVideo = () => {
+      const player = youtubePlayerRef.current;
+      if (player) {
+        try {
+          player.stopVideo();
+        } catch {
+          // ignore if the player is not ready yet
+        }
+      }
+
       const frameWindow = iframeRef.current?.contentWindow;
       if (frameWindow) {
         frameWindow.postMessage({ event: "command", func: "stopVideo", args: [] }, "*");
@@ -68,28 +111,66 @@ export function MusicSection({ lang }: { lang: Lang }) {
       stopCurrentVideo();
     };
 
-    const handleYouTubeStateMessage = (event: MessageEvent) => {
-      if (!iframeRef.current?.contentWindow || event.source !== iframeRef.current.contentWindow) return;
-      let data: any = event.data;
-      if (typeof data === "string") {
-        try {
-          data = JSON.parse(data);
-        } catch {
-          return;
-        }
-      }
-      if (data?.event === "onStateChange" && data?.data === 1) {
-        window.dispatchEvent(new CustomEvent(AUDIO_PLAY_REQUEST, { detail: { source: "youtube" } }));
-      }
-    };
-
     window.addEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
-    window.addEventListener("message", handleYouTubeStateMessage);
     return () => {
       window.removeEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
-      window.removeEventListener("message", handleYouTubeStateMessage);
     };
   }, []);
+
+  useEffect(() => {
+    if (!activeVideo?.videoId || !iframeRef.current) return;
+
+    const initializePlayer = () => {
+      if (!window.YT?.Player || !iframeRef.current) return;
+
+      if (youtubePlayerRef.current) {
+        youtubePlayerRef.current.loadVideoById(activeVideo.videoId);
+        return;
+      }
+
+      youtubePlayerRef.current = new window.YT.Player(iframeRef.current, {
+        videoId: activeVideo.videoId,
+        playerVars: {
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+        },
+        events: {
+          onReady: () => {
+            youtubePlayerRef.current?.loadVideoById(activeVideo.videoId);
+          },
+          onStateChange: (event) => {
+            if (event.data === 1) {
+              window.dispatchEvent(new CustomEvent(AUDIO_PLAY_REQUEST, { detail: { source: "youtube" } }));
+            }
+          },
+        },
+      });
+    };
+
+    if (window.YT?.Player) {
+      initializePlayer();
+      return;
+    }
+
+    const existingScript = document.getElementById("youtube-iframe-api");
+    if (existingScript) {
+      window.onYouTubeIframeAPIReady = initializePlayer;
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = "youtube-iframe-api";
+    script.src = "https://www.youtube.com/iframe_api";
+    script.async = true;
+    document.body.appendChild(script);
+
+    window.onYouTubeIframeAPIReady = initializePlayer;
+
+    return () => {
+      window.onYouTubeIframeAPIReady = undefined;
+    };
+  }, [activeVideo?.videoId]);
 
   return (
     <section id="music" className="py-24 px-6">
@@ -220,9 +301,13 @@ export function MusicSection({ lang }: { lang: Lang }) {
                   <button
                     type="button"
                     onClick={() => {
-                      const frameWindow = iframeRef.current?.contentWindow;
-                      if (frameWindow) {
-                        frameWindow.postMessage({ event: "command", func: "stopVideo", args: [] }, "*");
+                      const player = youtubePlayerRef.current;
+                      if (player) {
+                        try {
+                          player.stopVideo();
+                        } catch {
+                          // ignore if the player is not ready yet
+                        }
                       }
                       window.dispatchEvent(new CustomEvent(AUDIO_PLAY_REQUEST, { detail: { source: "youtube" } }));
                       setSelectedVideo({
