@@ -51,6 +51,7 @@ export default function App() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const resumeBgmTimeout = useRef<number | null>(null);
   const intentionalPauseRef = useRef(false);
+  const youtubePlaybackActiveRef = useRef(false);
   const backgroundAsset = selectedBackground
     ? availableBackgrounds.find((asset) => asset.src === selectedBackground) ?? availableBackgrounds[0] ?? null
     : availableBackgrounds[0] ?? null;
@@ -104,6 +105,12 @@ export default function App() {
     }
 
     intentionalPauseRef.current = false;
+    if (youtubePlaybackActiveRef.current) {
+      intentionalPauseRef.current = true;
+      audioRef.current?.pause();
+      return;
+    }
+
     if (document.visibilityState !== "hidden") {
       window.setTimeout(() => {
         void playBgm();
@@ -116,6 +123,10 @@ export default function App() {
 
     if (!musicOn) {
       handleSetMusic(true);
+      return;
+    }
+
+    if (youtubePlaybackActiveRef.current) {
       return;
     }
 
@@ -140,11 +151,11 @@ export default function App() {
     }, 250);
   };
 
-  const playBgm = async () => {
+  const playBgm = async (attempt = 0) => {
     const el = audioRef.current;
     if (!el || !currentBgmTrack || !musicOn || document.visibilityState === "hidden") return;
-    if (intentionalPauseRef.current) return;
-    if (!el.paused) return;
+    if (intentionalPauseRef.current || youtubePlaybackActiveRef.current) return;
+    if (!el.paused && el.getAttribute("data-src") === currentBgmTrack.src) return;
 
     ensureBgmSource();
 
@@ -153,6 +164,12 @@ export default function App() {
       el.muted = false;
       await el.play();
     } catch {
+      if (attempt < 2) {
+        window.setTimeout(() => {
+          void playBgm(attempt + 1);
+        }, 180);
+        return;
+      }
       scheduleBgmResume();
     }
   };
@@ -165,6 +182,7 @@ export default function App() {
       if (detail?.element === el) return;
       if (detail?.source === "audio" || detail?.source === "youtube") {
         intentionalPauseRef.current = true;
+        youtubePlaybackActiveRef.current = detail?.source === "youtube";
         if (!el.paused) el.pause();
 
         if (resumeBgmTimeout.current) {
@@ -173,9 +191,32 @@ export default function App() {
       }
     };
 
+    const handleYouTubePlayState = (event: Event) => {
+      const detail = (event as CustomEvent<{ playing?: boolean }>).detail;
+      if (typeof detail?.playing !== "boolean") return;
+
+      youtubePlaybackActiveRef.current = detail.playing;
+      if (detail.playing) {
+        intentionalPauseRef.current = true;
+        audioRef.current?.pause();
+        if (resumeBgmTimeout.current) {
+          window.clearTimeout(resumeBgmTimeout.current);
+        }
+      } else if (musicOn) {
+        intentionalPauseRef.current = false;
+        window.setTimeout(() => {
+          void playBgm();
+        }, 0);
+      }
+    };
+
     window.addEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
-    return () => window.removeEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
-  }, []);
+    window.addEventListener("youtube:play-state", handleYouTubePlayState as EventListener);
+    return () => {
+      window.removeEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
+      window.removeEventListener("youtube:play-state", handleYouTubePlayState as EventListener);
+    };
+  }, [musicOn]);
 
   useEffect(() => {
     const el = audioRef.current;

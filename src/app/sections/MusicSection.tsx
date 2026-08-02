@@ -143,7 +143,9 @@ export function MusicSection({ lang }: { lang: Lang }) {
             youtubePlayerRef.current?.cueVideoById(activeVideo.videoId);
           },
           onStateChange: (event) => {
-            if (event.data === window.YT?.PlayerState?.PLAYING) {
+            const isPlaying = event.data === window.YT?.PlayerState?.PLAYING;
+            window.dispatchEvent(new CustomEvent("youtube:play-state", { detail: { playing: isPlaying } }));
+            if (isPlaying) {
               window.dispatchEvent(new CustomEvent(AUDIO_PLAY_REQUEST, { detail: { source: "youtube" } }));
             }
           },
