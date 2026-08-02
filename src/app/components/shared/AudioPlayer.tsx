@@ -95,19 +95,27 @@ export function AudioPlayer({
   const [resolvedArtist, setResolvedArtist] = useState(artist);
   const [resolvedAlbum, setResolvedAlbum] = useState(album);
 
+  const stopPlayback = () => {
+    const el = audioRef.current;
+    if (el && !el.paused) {
+      el.pause();
+    }
+    setPlaying(false);
+    setProgress(0);
+  };
+
   const toggle = async () => {
     const el = audioRef.current;
 
     if (playing) {
-      el?.pause();
-      setPlaying(false);
-      setProgress(0);
+      stopPlayback();
       return;
     }
 
     if (!audioReady) {
       pendingPlayRef.current = true;
       setAudioReady(true);
+      window.dispatchEvent(new CustomEvent(AUDIO_PLAY_REQUEST, { detail: { source: "audio", element: null } }));
       return;
     }
 
@@ -124,13 +132,6 @@ export function AudioPlayer({
   };
 
   useEffect(() => {
-    if (!audioReady) return;
-
-    const el = audioRef.current;
-    if (!el) return;
-
-    let cancelled = false;
-
     const handlePlayRequest = (event: Event) => {
       const detail = (event as CustomEvent<{ element?: HTMLAudioElement | null; source?: string }>).detail;
       const current = audioRef.current;
@@ -143,6 +144,21 @@ export function AudioPlayer({
         setProgress(0);
       }
     };
+
+    window.addEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
+
+    return () => {
+      window.removeEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!audioReady) return;
+
+    const el = audioRef.current;
+    if (!el) return;
+
+    let cancelled = false;
 
     const onLoadedMetadata = () => {
       setResolvedDuration(formatDuration(el.duration));
@@ -171,7 +187,6 @@ export function AudioPlayer({
     };
 
     void hydrateMetadata();
-    window.addEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
     el.addEventListener("loadedmetadata", onLoadedMetadata);
     el.addEventListener("ended", onEnd);
     el.addEventListener("timeupdate", onTime);
@@ -196,7 +211,6 @@ export function AudioPlayer({
     return () => {
       cancelled = true;
       pendingPlayRef.current = false;
-      window.removeEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
       el.removeEventListener("loadedmetadata", onLoadedMetadata);
       el.removeEventListener("ended", onEnd);
       el.removeEventListener("timeupdate", onTime);

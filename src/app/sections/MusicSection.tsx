@@ -54,14 +54,18 @@ export function MusicSection({ lang }: { lang: Lang }) {
   const iframeOrigin = typeof window !== "undefined" ? window.location.origin : "";
 
   useEffect(() => {
-    const handlePlayRequest = (event: Event) => {
-      const detail = (event as CustomEvent<{ source?: string }>).detail;
-      if (detail?.source !== "audio") return;
-
+    const stopCurrentVideo = () => {
       const frameWindow = iframeRef.current?.contentWindow;
       if (frameWindow) {
         frameWindow.postMessage({ event: "command", func: "stopVideo", args: [] }, "*");
       }
+    };
+
+    const handlePlayRequest = (event: Event) => {
+      const detail = (event as CustomEvent<{ source?: string }>).detail;
+      if (detail?.source !== "audio") return;
+
+      stopCurrentVideo();
     };
 
     const handleYouTubeStateMessage = (event: MessageEvent) => {
@@ -164,12 +168,14 @@ export function MusicSection({ lang }: { lang: Lang }) {
               No audio demos available.
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {AUDIO_DEMOS.map((demo, i) => (
-                <FadeIn key={demo.title} delay={i * 0.08}>
-                  <AudioPlayer {...demo} />
-                </FadeIn>
-              ))}
+            <div className="max-h-[460px] overflow-y-auto pr-2">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {AUDIO_DEMOS.map((demo, i) => (
+                  <FadeIn key={demo.title} delay={i * 0.08}>
+                    <AudioPlayer {...demo} />
+                  </FadeIn>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -208,12 +214,16 @@ export function MusicSection({ lang }: { lang: Lang }) {
               </div>
             </GlassCard>
 
-            <div className="space-y-4">
+            <div className="max-h-[460px] overflow-y-auto space-y-4 pr-2">
               {videoCards.map((video, i) => (
                 <FadeIn key={video.title} delay={i * 0.06}>
                   <button
                     type="button"
                     onClick={() => {
+                      const frameWindow = iframeRef.current?.contentWindow;
+                      if (frameWindow) {
+                        frameWindow.postMessage({ event: "command", func: "stopVideo", args: [] }, "*");
+                      }
                       window.dispatchEvent(new CustomEvent(AUDIO_PLAY_REQUEST, { detail: { source: "youtube" } }));
                       setSelectedVideo({
                         videoId: video.videoId,
