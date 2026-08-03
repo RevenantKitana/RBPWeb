@@ -67,15 +67,22 @@ export default function App() {
 
     return null;
   }, [availableBgmTracks, selectedBgm]);
+  const currentBgmTrackRef = useRef<{ src: string; title: string } | null>(null);
+
+  useEffect(() => {
+    currentBgmTrackRef.current = currentBgmTrack;
+  }, [currentBgmTrack]);
 
   const ensureBgmSource = () => {
     const el = audioRef.current;
-    if (!el || !currentBgmTrack) return;
+    const activeTrack = currentBgmTrackRef.current;
+    if (!el || !activeTrack) return;
 
-    const nextSrc = currentBgmTrack.src;
+    const nextSrc = activeTrack.src;
     const loadedSrc = el.getAttribute("data-src");
     if (loadedSrc === nextSrc) return;
 
+    el.pause();
     el.src = nextSrc;
     el.load();
     el.setAttribute("data-src", nextSrc);
@@ -118,11 +125,48 @@ export default function App() {
     }
   };
 
+  const playBgmTrack = async (trackSrc: string | null, attempt = 0) => {
+    const el = audioRef.current;
+    if (!el || !trackSrc || !musicOn || document.visibilityState === "hidden") return;
+    if (intentionalPauseRef.current || youtubePlaybackActiveRef.current) return;
+
+    ensureBgmSource();
+
+    if (el.getAttribute("data-src") !== trackSrc) {
+      el.pause();
+      el.src = trackSrc;
+      el.load();
+      el.setAttribute("data-src", trackSrc);
+    }
+
+    try {
+      el.volume = 1;
+      el.muted = false;
+      await el.play();
+    } catch {
+      if (attempt < 2) {
+        window.setTimeout(() => {
+          void playBgmTrack(trackSrc, attempt + 1);
+        }, 180);
+        return;
+      }
+      scheduleBgmResume();
+    }
+  };
+
   const handleBgmChange = (value: string | null) => {
-    setSelectedBgm(value);
+    const nextTrack = availableBgmTracks.find((track) => track.src === value);
+    const nextTrackInfo = nextTrack ? { src: nextTrack.src, title: nextTrack.name } : null;
+    currentBgmTrackRef.current = nextTrackInfo;
+    setSelectedBgm(nextTrack?.src ?? null);
 
     if (!musicOn) {
       handleSetMusic(true);
+      if (nextTrackInfo) {
+        window.setTimeout(() => {
+          void playBgmTrack(nextTrackInfo.src);
+        }, 0);
+      }
       return;
     }
 
@@ -130,14 +174,9 @@ export default function App() {
       return;
     }
 
-    const el = audioRef.current;
-    const nextTrack = availableBgmTracks.find((track) => track.src === value);
-    if (!el || !nextTrack) return;
+    if (!nextTrackInfo) return;
 
-    el.src = nextTrack.src;
-    el.load();
-    el.setAttribute("data-src", nextTrack.src);
-    void el.play().catch(() => undefined);
+    void playBgmTrack(nextTrackInfo.src);
   };
 
   const scheduleBgmResume = () => {
@@ -152,26 +191,8 @@ export default function App() {
   };
 
   const playBgm = async (attempt = 0) => {
-    const el = audioRef.current;
-    if (!el || !currentBgmTrack || !musicOn || document.visibilityState === "hidden") return;
-    if (intentionalPauseRef.current || youtubePlaybackActiveRef.current) return;
-    if (!el.paused && el.getAttribute("data-src") === currentBgmTrack.src) return;
-
-    ensureBgmSource();
-
-    try {
-      el.volume = 1;
-      el.muted = false;
-      await el.play();
-    } catch {
-      if (attempt < 2) {
-        window.setTimeout(() => {
-          void playBgm(attempt + 1);
-        }, 180);
-        return;
-      }
-      scheduleBgmResume();
-    }
+    const track = currentBgmTrackRef.current;
+    await playBgmTrack(track?.src ?? null, attempt);
   };
 
   useEffect(() => {

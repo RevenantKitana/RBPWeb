@@ -1,8 +1,8 @@
 import type { ArticleItem, Lang } from "@/app/types";
 
 export const ARTICLE_EMPTY_CATEGORY_TEXT: Record<Lang, string> = {
-  en: "No category",
-  vi: "Không có danh mục",
+  en: "No articles",
+  vi: "Không có bài viết",
 };
 
 export function getArticleCategory(category: string | undefined, lang: Lang = "en") {
