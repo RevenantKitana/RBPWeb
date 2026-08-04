@@ -317,7 +317,10 @@ export function SoftwareSection({ lang }: { lang: Lang }) {
               <AIAgentCard lang={lang} />
             </FadeIn>
             <FadeIn delay={0.2}>
-              <Dialog open={isEmotionModalOpen} onOpenChange={setIsEmotionModalOpen}>
+              <div id="emotion-demo">
+                <Dialog open={isEmotionModalOpen} onOpenChange={(open) => {
+                  setIsEmotionModalOpen(open);
+                }}>
                 <DialogTrigger asChild>
                   <GlassCard className="cursor-pointer p-6 flex flex-col h-full min-h-0 hover:border-white/20 hover:bg-white/10 transition">
                     <div className="flex items-center gap-2 mb-3">
