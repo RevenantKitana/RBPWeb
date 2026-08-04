@@ -12,6 +12,8 @@ export function scrollToCentered(target: string | HTMLElement | null) {
 }
 
 export function attachHashAnchorScroll() {
+  const centeredIds = new Set(["ai-trigger-demo", "emotion-demo"]);
+
   const handleClick = (event: MouseEvent) => {
     const target = event.target instanceof Element ? event.target.closest("a[href]") : null;
     if (!target) return;
@@ -23,7 +25,14 @@ export function attachHashAnchorScroll() {
     if (!id) return;
 
     event.preventDefault();
-    scrollToCentered(id);
+
+    if (centeredIds.has(id)) {
+      scrollToCentered(id);
+      return;
+    }
+
+    const element = document.getElementById(id);
+    element?.scrollIntoView({ behavior: "smooth" });
   };
 
   document.addEventListener("click", handleClick);
