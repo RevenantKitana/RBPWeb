@@ -71,6 +71,7 @@ export function MusicSection({ lang }: { lang: Lang }) {
   }>(null);
   const [showStickyMedia, setShowStickyMedia] = useState(false);
   const mediaSectionRef = useRef<HTMLDivElement>(null);
+  const audioPlayerRefs = useRef<Array<HTMLDivElement | null>>([]);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const youtubePlayerRef = useRef<YouTubePlayerInstance | null>(null);
 
@@ -95,6 +96,15 @@ export function MusicSection({ lang }: { lang: Lang }) {
   } : null);
 
   const iframeOrigin = typeof window !== "undefined" ? window.location.origin : "";
+
+  const scrollToActiveMedia = () => {
+    const target = audioPlayerRefs.current[0] ?? mediaSectionRef.current;
+    if (!target) return;
+
+    const headerOffset = 88;
+    const elementTop = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+    window.scrollTo({ top: elementTop, behavior: "smooth" });
+  };
 
   useEffect(() => {
     const stopCurrentVideo = () => {
@@ -328,7 +338,11 @@ export function MusicSection({ lang }: { lang: Lang }) {
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {AUDIO_DEMOS.map((demo, i) => (
                   <FadeIn key={demo.title} delay={i * 0.08}>
-                    <AudioPlayer {...demo} />
+                    <div ref={(node) => {
+                      audioPlayerRefs.current[i] = node;
+                    }}>
+                      <AudioPlayer {...demo} />
+                    </div>
                   </FadeIn>
                 ))}
               </div>
@@ -436,19 +450,23 @@ export function MusicSection({ lang }: { lang: Lang }) {
         </div>
 
         {stickyMedia && showStickyMedia && (
-          <div className="fixed bottom-4 left-4 right-4 z-40 flex justify-center sm:justify-end sm:left-auto sm:right-4">
+          <button
+            type="button"
+            onClick={scrollToActiveMedia}
+            className="fixed bottom-4 left-4 right-4 z-40 flex justify-center sm:justify-end sm:left-auto sm:right-4"
+          >
             <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-black/70 p-3 shadow-[0_16px_50px_rgba(0,0,0,0.3)] backdrop-blur-xl">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-[11px] font-semibold uppercase text-primary">
                   {stickyMedia.label.slice(0, 2)}
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 text-left">
                   <p className="truncate text-sm font-medium text-foreground/95">{stickyMedia.title}</p>
                   <p className="truncate text-xs text-muted-foreground">{stickyMedia.subtitle}</p>
                 </div>
               </div>
             </div>
-          </div>
+          </button>
         )}
 
         <div>
