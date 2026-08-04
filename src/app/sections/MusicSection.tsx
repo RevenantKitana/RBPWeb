@@ -69,6 +69,8 @@ export function MusicSection({ lang }: { lang: Lang }) {
     subtitle: string;
     label: string;
   }>(null);
+  const [showStickyMedia, setShowStickyMedia] = useState(false);
+  const mediaSectionRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const youtubePlayerRef = useRef<YouTubePlayerInstance | null>(null);
 
@@ -123,6 +125,21 @@ export function MusicSection({ lang }: { lang: Lang }) {
       window.removeEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
     };
   }, []);
+
+  useEffect(() => {
+    if (!mediaSectionRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        setShowStickyMedia(Boolean(stickyMedia) && !entry?.isIntersecting);
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(mediaSectionRef.current);
+    return () => observer.disconnect();
+  }, [stickyMedia]);
 
   useEffect(() => {
     const handlePlaybackState = (event: Event) => {
@@ -296,7 +313,7 @@ export function MusicSection({ lang }: { lang: Lang }) {
           </FadeIn>
         </div>
 
-        <div className="mb-16">
+        <div ref={mediaSectionRef} className="mb-16">
           <FadeIn>
             <p className="font-mono text-[10px] tracking-[0.22em] text-muted-foreground uppercase mb-6">
               {t.audioTitle}
@@ -418,8 +435,8 @@ export function MusicSection({ lang }: { lang: Lang }) {
           </div>
         </div>
 
-        {stickyMedia && (
-          <div className="sticky bottom-4 z-30 mt-8 flex justify-end">
+        {stickyMedia && showStickyMedia && (
+          <div className="fixed bottom-4 left-4 right-4 z-40 flex justify-center sm:justify-end sm:left-auto sm:right-4">
             <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-black/70 p-3 shadow-[0_16px_50px_rgba(0,0,0,0.3)] backdrop-blur-xl">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-[11px] font-semibold uppercase text-primary">
