@@ -29,6 +29,7 @@ export function useEmotionWebSocket(
   const sendTimerRef = useRef<number | null>(null);
   const reconnectTimerRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef(0);
+  const requestNextFrameRef = useRef<() => void>(() => {});
 
   const clearSendTimer = () => {
     if (sendTimerRef.current !== null) {
@@ -68,7 +69,7 @@ export function useEmotionWebSocket(
     clearSendTimer();
     sendTimerRef.current = window.setTimeout(() => {
       sendTimerRef.current = null;
-      requestNextFrame();
+      requestNextFrameRef.current();
     }, delay);
   }, []);
 
@@ -130,6 +131,10 @@ export function useEmotionWebSocket(
       scheduleNextFrame(FRAME_INTERVAL_MS);
     }
   }, [enabled, scheduleNextFrame]);
+
+  useEffect(() => {
+    requestNextFrameRef.current = requestNextFrame;
+  }, [requestNextFrame]);
 
   const scheduleReconnect = useCallback(() => {
     if (!mountedRef.current) return;

@@ -16,8 +16,9 @@ function getStatusLabel(status: string, t: ReturnType<typeof T[Lang]>) {
 
 export function EmotionLiveCard({ lang }: { lang: Lang }) {
   const t = T[lang].software;
-  const { videoRef, ready, permissionError } = useCameraStream();
-  const { status, faces, count, inferenceMs, lastError } = useEmotionWebSocket(videoRef, ready);
+  const [cameraEnabled, setCameraEnabled] = useState(false);
+  const { videoRef, ready, permissionError } = useCameraStream(cameraEnabled);
+  const { status, faces, count, inferenceMs, lastError } = useEmotionWebSocket(videoRef, cameraEnabled && ready);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [renderWidth, setRenderWidth] = useState(0);
   const [renderHeight, setRenderHeight] = useState(0);
@@ -70,9 +71,18 @@ export function EmotionLiveCard({ lang }: { lang: Lang }) {
             <p className="text-xs leading-relaxed text-muted-foreground">{t.emotionFeatureSub}</p>
           </div>
         </div>
-        <span className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-primary">
-          {label}
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCameraEnabled((current) => !current)}
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-foreground transition hover:border-white/20 hover:bg-white/10"
+          >
+            {cameraEnabled ? t.emotionActionStop : t.emotionActionStart}
+          </button>
+          <span className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-primary">
+            {label}
+          </span>
+        </div>
       </div>
 
       <div className="relative overflow-hidden rounded-3xl bg-black/90 border border-white/10" ref={wrapperRef}>
@@ -107,7 +117,15 @@ export function EmotionLiveCard({ lang }: { lang: Lang }) {
               {permissionError}
             </div>
           )}
-          {!ready && !permissionError && (
+          {!cameraEnabled && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-4 text-center text-sm text-white/80">
+              <div className="space-y-2">
+                <p>{t.emotionCameraInactive}</p>
+                <p className="text-xs text-muted-foreground">{t.emotionCameraInstructions}</p>
+              </div>
+            </div>
+          )}
+          {cameraEnabled && !ready && !permissionError && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-4 text-center text-sm text-white/80">
               <div className="space-y-2">
                 <p>{t.emotionCameraInitializing}</p>

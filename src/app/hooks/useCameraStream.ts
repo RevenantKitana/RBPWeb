@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-export function useCameraStream() {
+export function useCameraStream(enabled: boolean) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
   const [permissionError, setPermissionError] = useState<string | null>(null);
@@ -8,7 +8,23 @@ export function useCameraStream() {
   useEffect(() => {
     let active = true;
 
+    const stopStream = () => {
+      const videoElement = videoRef.current;
+      const stream = videoElement?.srcObject as MediaStream | null;
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+        videoElement!.srcObject = null;
+      }
+      setReady(false);
+    };
+
     const initializeCamera = async () => {
+      if (!enabled) {
+        stopStream();
+        setPermissionError(null);
+        return;
+      }
+
       if (!navigator.mediaDevices?.getUserMedia) {
         setPermissionError("Camera access is not supported by this browser.");
         return;
@@ -41,6 +57,7 @@ export function useCameraStream() {
 
         await videoElement.play();
         if (active) {
+          setPermissionError(null);
           setReady(true);
         }
       } catch (error) {
@@ -49,6 +66,7 @@ export function useCameraStream() {
             ? error.message
             : "Unable to access webcam. Please allow camera permission.";
         setPermissionError(message);
+        setReady(false);
       }
     };
 
@@ -56,13 +74,9 @@ export function useCameraStream() {
 
     return () => {
       active = false;
-      const videoElement = videoRef.current;
-      const stream = videoElement?.srcObject as MediaStream | null;
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
+      stopStream();
     };
-  }, []);
+  }, [enabled]);
 
   return { videoRef, ready, permissionError };
 }
