@@ -168,7 +168,7 @@ export const PROJECTS: Project[] = [
     roleVi: "AI / Computer Vision Engineer",
     roleEn: "AI / Computer Vision Engineer",
     github: "https://github.com/RevenantKitana/emotion_recognition_usemobilenetv2",
-    demo: "#",
+    demo: "#emotion-demo",
     architecture:
       "Training flow: prepare image datasets, build a MobileNetV2-based classifier, train with transfer learning and callbacks, then save the best model for inference.\nInference flow: detect faces from images or webcam frames, preprocess the face region, run model prediction, and render results through the GUI or OpenCV windows.\nOperational model: the system is designed for both offline evaluation and real-time interaction with bounded, explainable outputs.",
     architectureVi:
