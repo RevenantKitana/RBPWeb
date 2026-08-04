@@ -6,7 +6,8 @@ import { useEmotionWebSocket } from "@/app/hooks/useEmotionWebSocket";
 import type { Lang } from "@/app/types";
 import { T } from "@/app/data/content";
 
-function getStatusLabel(status: string, t: ReturnType<typeof T[Lang]>) {
+function getStatusLabel(status: string, open: boolean, t: ReturnType<typeof T[Lang]>) {
+  if (!open) return t.software.emotionModalClosedLabel;
   if (status === "connecting") return t.software.emotionStateConnecting;
   if (status === "connected") return t.software.emotionStateConnected;
   if (status === "disconnected") return t.software.emotionStateReconnecting;
@@ -14,11 +15,11 @@ function getStatusLabel(status: string, t: ReturnType<typeof T[Lang]>) {
   return t.software.emotionStateIdle;
 }
 
-export function EmotionLiveCard({ lang }: { lang: Lang }) {
+export function EmotionLiveCard({ lang, open }: { lang: Lang; open: boolean }) {
   const t = T[lang].software;
   const [cameraEnabled, setCameraEnabled] = useState(false);
-  const { videoRef, ready, permissionError } = useCameraStream(cameraEnabled);
-  const { status, faces, count, inferenceMs, lastError } = useEmotionWebSocket(videoRef, cameraEnabled && ready);
+  const { videoRef, ready, permissionError } = useCameraStream(cameraEnabled && open);
+  const { status, faces, count, inferenceMs, lastError } = useEmotionWebSocket(videoRef, cameraEnabled && ready && open);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [renderWidth, setRenderWidth] = useState(0);
   const [renderHeight, setRenderHeight] = useState(0);
@@ -59,7 +60,7 @@ export function EmotionLiveCard({ lang }: { lang: Lang }) {
     });
   }, [faces, renderWidth, renderHeight]);
 
-  const label = getStatusLabel(status, T[lang]);
+  const label = getStatusLabel(status, open, T[lang]);
 
   return (
     <GlassCard className="p-6 flex flex-col h-full min-h-[460px] gap-4">
@@ -117,7 +118,7 @@ export function EmotionLiveCard({ lang }: { lang: Lang }) {
               {permissionError}
             </div>
           )}
-          {!cameraEnabled && (
+          {!open && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-4 text-center text-sm text-white/80">
               <div className="space-y-2">
                 <p>{t.emotionCameraInactive}</p>
@@ -125,7 +126,15 @@ export function EmotionLiveCard({ lang }: { lang: Lang }) {
               </div>
             </div>
           )}
-          {cameraEnabled && !ready && !permissionError && (
+          {open && !cameraEnabled && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-4 text-center text-sm text-white/80">
+              <div className="space-y-2">
+                <p>{t.emotionCameraInactive}</p>
+                <p className="text-xs text-muted-foreground">{t.emotionCameraInstructions}</p>
+              </div>
+            </div>
+          )}
+          {open && cameraEnabled && !ready && !permissionError && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-4 text-center text-sm text-white/80">
               <div className="space-y-2">
                 <p>{t.emotionCameraInitializing}</p>

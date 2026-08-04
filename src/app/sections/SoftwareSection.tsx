@@ -16,6 +16,7 @@ export function SoftwareSection({ lang }: { lang: Lang }) {
   const [expandedProject, setExpandedProject] = useState<number | null>(null);
   const [skillIndex, setSkillIndex] = useState(0);
   const [isSkillPaused, setIsSkillPaused] = useState(false);
+  const [isEmotionModalOpen, setIsEmotionModalOpen] = useState(false);
 
   useEffect(() => {
     if (isSkillPaused) return;
@@ -316,7 +317,7 @@ export function SoftwareSection({ lang }: { lang: Lang }) {
               <AIAgentCard lang={lang} />
             </FadeIn>
             <FadeIn delay={0.2}>
-              <Dialog>
+              <Dialog open={isEmotionModalOpen} onOpenChange={setIsEmotionModalOpen}>
                 <DialogTrigger asChild>
                   <GlassCard className="cursor-pointer p-6 flex flex-col h-full min-h-0 hover:border-white/20 hover:bg-white/10 transition">
                     <div className="flex items-center gap-2 mb-3">
@@ -348,7 +349,7 @@ export function SoftwareSection({ lang }: { lang: Lang }) {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="p-6">
-                    <EmotionLiveCard lang={lang} />
+                    <EmotionLiveCard lang={lang} open={isEmotionModalOpen} />
                   </div>
                 </DialogContent>
               </Dialog>
