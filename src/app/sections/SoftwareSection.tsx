@@ -7,6 +7,7 @@ import { GlassCard } from "@/app/components/shared/GlassCard";
 import { SectionHeader } from "@/app/components/shared/SectionHeader";
 import { ForumPostCard } from "@/app/components/shared/ForumPostCard";
 import { AIAgentCard } from "@/app/components/shared/AIAgentCard";
+import { EmotionLiveCard } from "@/app/components/shared/EmotionLiveCard";
 import { T, SKILLS, PROJECTS, unsplash } from "@/app/data/content";
 
 export function SoftwareSection({ lang }: { lang: Lang }) {
@@ -314,31 +315,7 @@ export function SoftwareSection({ lang }: { lang: Lang }) {
               <AIAgentCard lang={lang} />
             </FadeIn>
             <FadeIn delay={0.2}>
-              <GlassCard className="p-6 flex flex-col h-full min-h-0">
-                <div className="flex items-center gap-2 mb-3">
-                  <Camera size={15} className="text-primary" />
-                  <p className="font-medium text-foreground/90 text-sm">{t.emotionFeatureTitle}</p>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{t.emotionFeatureSub}</p>
-                <div className="mt-4 rounded-xl border border-primary/20 bg-primary/[0.08] p-3 flex items-center justify-between gap-3">
-                  <span className="text-xs text-primary">{t.emotionFeatureStatus}</span>
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-primary/80">Live</span>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {[
-                    "Webcam",
-                    "Image input",
-                    "7 emotion states",
-                  ].map((item) => (
-                    <span key={item} className="text-[10px] px-2 py-1 rounded-full bg-white/[0.05] text-muted-foreground border border-white/[0.08]">
-                      {item}
-                    </span>
-                  ))}
-                </div>
-                <div className="mt-auto pt-4 text-xs text-foreground/60">
-                  {t.emotionFeatureFooter}
-                </div>
-              </GlassCard>
+              <EmotionLiveCard lang={lang} />
             </FadeIn>
           </div>
         </div>
