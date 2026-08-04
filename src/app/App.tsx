@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
 import type { Lang } from "@/app/types";
 import { Navbar } from "@/app/components/shared/Navbar";
-import { AUDIO_PLAY_REQUEST } from "@/app/components/shared/AudioPlayer";
+import { AUDIO_PLAY_REQUEST, AUDIO_PLAYBACK_STATE } from "@/app/components/shared/AudioPlayer";
 import { HeroSection } from "@/app/sections/HeroSection";
 import { AboutSection } from "@/app/sections/AboutSection";
 import { SoftwareSection } from "@/app/sections/SoftwareSection";
@@ -52,6 +52,7 @@ export default function App() {
   const resumeBgmTimeout = useRef<number | null>(null);
   const intentionalPauseRef = useRef(false);
   const youtubePlaybackActiveRef = useRef(false);
+  const mediaPlaybackCountRef = useRef(0);
   const backgroundAsset = selectedBackground
     ? availableBackgrounds.find((asset) => asset.src === selectedBackground) ?? availableBackgrounds[0] ?? null
     : availableBackgrounds[0] ?? null;
@@ -195,6 +196,33 @@ export default function App() {
     await playBgmTrack(track?.src ?? null, attempt);
   };
 
+  const pauseBgmForMedia = (source: "audio" | "youtube") => {
+    mediaPlaybackCountRef.current += 1;
+    intentionalPauseRef.current = true;
+    youtubePlaybackActiveRef.current = source === "youtube";
+
+    const el = audioRef.current;
+    if (el && !el.paused) {
+      el.pause();
+    }
+
+    if (resumeBgmTimeout.current) {
+      window.clearTimeout(resumeBgmTimeout.current);
+    }
+  };
+
+  const resumeBgmAfterMedia = () => {
+    mediaPlaybackCountRef.current = Math.max(0, mediaPlaybackCountRef.current - 1);
+    if (mediaPlaybackCountRef.current > 0) return;
+
+    if (!musicOn || document.visibilityState === "hidden") return;
+
+    intentionalPauseRef.current = false;
+    window.setTimeout(() => {
+      void playBgm();
+    }, 0);
+  };
+
   useEffect(() => {
     const handlePlayRequest = (event: Event) => {
       const detail = (event as CustomEvent<{ source?: string; element?: HTMLAudioElement | null }>).detail;
@@ -202,13 +230,18 @@ export default function App() {
       if (!el) return;
       if (detail?.element === el) return;
       if (detail?.source === "audio" || detail?.source === "youtube") {
-        intentionalPauseRef.current = true;
-        youtubePlaybackActiveRef.current = detail?.source === "youtube";
-        if (!el.paused) el.pause();
+        pauseBgmForMedia(detail?.source === "youtube" ? "youtube" : "audio");
+      }
+    };
 
-        if (resumeBgmTimeout.current) {
-          window.clearTimeout(resumeBgmTimeout.current);
-        }
+    const handlePlaybackState = (event: Event) => {
+      const detail = (event as CustomEvent<{ type?: string; playing?: boolean }>).detail;
+      if (detail?.type !== "audio") return;
+
+      if (detail.playing) {
+        pauseBgmForMedia("audio");
+      } else {
+        resumeBgmAfterMedia();
       }
     };
 
@@ -218,23 +251,18 @@ export default function App() {
 
       youtubePlaybackActiveRef.current = detail.playing;
       if (detail.playing) {
-        intentionalPauseRef.current = true;
-        audioRef.current?.pause();
-        if (resumeBgmTimeout.current) {
-          window.clearTimeout(resumeBgmTimeout.current);
-        }
-      } else if (musicOn) {
-        intentionalPauseRef.current = false;
-        window.setTimeout(() => {
-          void playBgm();
-        }, 0);
+        pauseBgmForMedia("youtube");
+      } else {
+        resumeBgmAfterMedia();
       }
     };
 
     window.addEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
+    window.addEventListener(AUDIO_PLAYBACK_STATE, handlePlaybackState as EventListener);
     window.addEventListener("youtube:play-state", handleYouTubePlayState as EventListener);
     return () => {
       window.removeEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
+      window.removeEventListener(AUDIO_PLAYBACK_STATE, handlePlaybackState as EventListener);
       window.removeEventListener("youtube:play-state", handleYouTubePlayState as EventListener);
     };
   }, [musicOn]);
