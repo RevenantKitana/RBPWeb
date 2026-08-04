@@ -18,6 +18,13 @@ function getStatusLabel(status: string, open: boolean, t: ReturnType<typeof T[La
 export function EmotionLiveCard({ lang, open }: { lang: Lang; open: boolean }) {
   const t = T[lang].software;
   const [cameraEnabled, setCameraEnabled] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setCameraEnabled(false);
+    }
+  }, [open]);
+
   const { videoRef, ready, permissionError } = useCameraStream(cameraEnabled && open);
   const { status, faces, count, inferenceMs, lastError } = useEmotionWebSocket(videoRef, cameraEnabled && ready && open);
   const wrapperRef = useRef<HTMLDivElement>(null);
