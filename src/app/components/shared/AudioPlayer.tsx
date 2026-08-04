@@ -1,9 +1,9 @@
 import { useRef, useState, useEffect } from "react";
 import { Pause, Play } from "lucide-react";
 import { GlassCard } from "@/app/components/shared/GlassCard";
-import { unsplash } from "@/app/data/content";
 
 export const AUDIO_PLAY_REQUEST = "audio:play-request";
+export const AUDIO_PLAYBACK_STATE = "audio:playback-state";
 
 function formatDuration(seconds: number) {
   if (!Number.isFinite(seconds) || seconds <= 0) return "—";
@@ -90,10 +90,28 @@ export function AudioPlayer({
   const [audioReady, setAudioReady] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [durationSeconds, setDurationSeconds] = useState(0);
   const [resolvedDuration, setResolvedDuration] = useState(duration);
   const [resolvedTitle, setResolvedTitle] = useState(title);
   const [resolvedArtist, setResolvedArtist] = useState(artist);
   const [resolvedAlbum, setResolvedAlbum] = useState(album);
+
+  const dispatchPlaybackState = (isPlaying: boolean) => {
+    window.dispatchEvent(
+      new CustomEvent(AUDIO_PLAYBACK_STATE, {
+        detail: {
+          type: "audio",
+          playing: isPlaying,
+          title: resolvedTitle,
+          artist: resolvedArtist,
+          album: resolvedAlbum,
+          genre,
+          duration: resolvedDuration,
+        },
+      })
+    );
+  };
 
   const stopPlayback = () => {
     const el = audioRef.current;
@@ -102,6 +120,8 @@ export function AudioPlayer({
     }
     setPlaying(false);
     setProgress(0);
+    setCurrentTime(0);
+    dispatchPlaybackState(false);
   };
 
   const toggle = async () => {
@@ -126,8 +146,10 @@ export function AudioPlayer({
     try {
       await el.play();
       setPlaying(true);
+      dispatchPlaybackState(true);
     } catch {
       setPlaying(false);
+      dispatchPlaybackState(false);
     }
   };
 
@@ -161,14 +183,20 @@ export function AudioPlayer({
     let cancelled = false;
 
     const onLoadedMetadata = () => {
+      setDurationSeconds(el.duration || 0);
       setResolvedDuration(formatDuration(el.duration));
     };
     const onEnd = () => {
       setPlaying(false);
       setProgress(0);
+      setCurrentTime(0);
+      dispatchPlaybackState(false);
     };
     const onTime = () => {
-      if (el.duration > 0) setProgress((el.currentTime / el.duration) * 100);
+      if (el.duration > 0) {
+        setCurrentTime(el.currentTime);
+        setProgress((el.currentTime / el.duration) * 100);
+      }
     };
 
     const hydrateMetadata = async () => {
@@ -199,11 +227,13 @@ export function AudioPlayer({
         .then(() => {
           if (!cancelled) {
             setPlaying(true);
+            dispatchPlaybackState(true);
           }
         })
         .catch(() => {
           if (!cancelled) {
             setPlaying(false);
+            dispatchPlaybackState(false);
           }
         });
     }
@@ -217,35 +247,49 @@ export function AudioPlayer({
     };
   }, [audioReady, src]);
 
+  const seekTo = (value: number) => {
+    const el = audioRef.current;
+    if (!el) return;
+
+    const clampedValue = Math.max(0, Math.min(value, durationSeconds || 0));
+    el.currentTime = clampedValue;
+    setCurrentTime(clampedValue);
+    setProgress(durationSeconds > 0 ? (clampedValue / durationSeconds) * 100 : 0);
+  };
+
   return (
-    <GlassCard className="flex gap-4 p-4 items-center" hover>
+    <GlassCard className="flex flex-col sm:flex-row gap-3 p-3 sm:p-4 items-start sm:items-center overflow-hidden" hover>
       {audioReady ? <audio ref={audioRef} src={src} preload="none" /> : null}
-      <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-muted">
-        <img src={unsplash(imgId, 96, 96)} alt={title} className="w-full h-full object-cover" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground/90 text-sm leading-tight truncate">{resolvedTitle}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {[resolvedArtist, resolvedAlbum].filter(Boolean).join(" • ") || genre} · {resolvedDuration}
-        </p>
-        <div className="mt-2 h-0.5 bg-white/10 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
       <button
         onClick={toggle}
-        className="w-10 h-10 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center hover:bg-primary/20 transition-colors flex-shrink-0"
+        className="w-11 h-11 rounded-full bg-primary/10 border border-primary/25 flex items-center justify-center hover:bg-primary/20 transition-colors flex-shrink-0"
         aria-label={playing ? "Pause" : "Play"}
       >
         {playing ? (
-          <Pause size={13} className="text-primary" />
+          <Pause size={14} className="text-primary" />
         ) : (
-          <Play size={13} className="text-primary ml-0.5" />
+          <Play size={14} className="text-primary ml-0.5" />
         )}
       </button>
+      <div className="flex-1 min-w-0 w-full">
+        <p className="font-medium text-foreground/90 text-sm leading-tight truncate">{resolvedTitle}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed truncate">
+          {[resolvedArtist, resolvedAlbum].filter(Boolean).join(" • ") || genre}
+        </p>
+        <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+          <span className="min-w-[2.2rem] text-right">{formatDuration(currentTime)}</span>
+          <input
+            type="range"
+            min={0}
+            max={durationSeconds || 100}
+            value={currentTime}
+            onChange={(event) => seekTo(Number(event.target.value))}
+            className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-primary"
+            aria-label="Seek audio"
+          />
+          <span className="min-w-[2.2rem]">{resolvedDuration}</span>
+        </div>
+      </div>
     </GlassCard>
   );
 }

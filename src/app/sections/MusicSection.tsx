@@ -4,7 +4,7 @@ import type { Lang, YoutubeEmbedState } from "@/app/types";
 import { FadeIn } from "@/app/components/shared/FadeIn";
 import { GlassCard } from "@/app/components/shared/GlassCard";
 import { SectionHeader } from "@/app/components/shared/SectionHeader";
-import { AudioPlayer, AUDIO_PLAY_REQUEST } from "@/app/components/shared/AudioPlayer";
+import { AudioPlayer, AUDIO_PLAY_REQUEST, AUDIO_PLAYBACK_STATE } from "@/app/components/shared/AudioPlayer";
 import { T, AUDIO_DEMOS, YOUTUBE_CARDS, RESOURCES, RESOURCE_COLORS } from "@/app/data/content";
 
 declare global {
@@ -63,6 +63,12 @@ function getYouTubeThumbnail(videoId: string, quality: "hqdefault" | "mqdefault"
 export function MusicSection({ lang }: { lang: Lang }) {
   const t = T[lang].music;
   const [selectedVideo, setSelectedVideo] = useState<YoutubeEmbedState | null>(null);
+  const [stickyMedia, setStickyMedia] = useState<null | {
+    type: "audio" | "video";
+    title: string;
+    subtitle: string;
+    label: string;
+  }>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const youtubePlayerRef = useRef<YouTubePlayerInstance | null>(null);
 
@@ -117,6 +123,53 @@ export function MusicSection({ lang }: { lang: Lang }) {
       window.removeEventListener(AUDIO_PLAY_REQUEST, handlePlayRequest as EventListener);
     };
   }, []);
+
+  useEffect(() => {
+    const handlePlaybackState = (event: Event) => {
+      const detail = (event as CustomEvent<{ type?: string; playing?: boolean; title?: string; artist?: string; album?: string; genre?: string }>).detail;
+      if (detail?.type !== "audio") return;
+
+      if (detail.playing) {
+        setStickyMedia({
+          type: "audio",
+          title: detail.title || t.audioTitle,
+          subtitle: [detail.artist, detail.album].filter(Boolean).join(" • ") || detail.genre || "Audio demo",
+          label: "Audio demo",
+        });
+      } else {
+        setStickyMedia((current) => (current?.type === "audio" ? null : current));
+      }
+    };
+
+    window.addEventListener(AUDIO_PLAYBACK_STATE, handlePlaybackState as EventListener);
+    return () => {
+      window.removeEventListener(AUDIO_PLAYBACK_STATE, handlePlaybackState as EventListener);
+    };
+  }, [t.audioTitle]);
+
+  useEffect(() => {
+    const handleYouTubeState = (event: Event) => {
+      const detail = (event as CustomEvent<{ playing?: boolean }>).detail;
+      if (!detail?.playing) {
+        setStickyMedia((current) => (current?.type === "video" ? null : current));
+        return;
+      }
+
+      if (activeVideo) {
+        setStickyMedia({
+          type: "video",
+          title: activeVideo.title,
+          subtitle: activeVideo.description || "Đang phát video YouTube",
+          label: "Video",
+        });
+      }
+    };
+
+    window.addEventListener("youtube:play-state", handleYouTubeState as EventListener);
+    return () => {
+      window.removeEventListener("youtube:play-state", handleYouTubeState as EventListener);
+    };
+  }, [activeVideo]);
 
   useEffect(() => {
     if (!activeVideo?.videoId || !iframeRef.current) return;
@@ -364,6 +417,22 @@ export function MusicSection({ lang }: { lang: Lang }) {
             </div>
           </div>
         </div>
+
+        {stickyMedia && (
+          <div className="sticky bottom-4 z-30 mt-8 flex justify-end">
+            <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-black/70 p-3 shadow-[0_16px_50px_rgba(0,0,0,0.3)] backdrop-blur-xl">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-[11px] font-semibold uppercase text-primary">
+                  {stickyMedia.label.slice(0, 2)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground/95">{stickyMedia.title}</p>
+                  <p className="truncate text-xs text-muted-foreground">{stickyMedia.subtitle}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div>
           <FadeIn>

@@ -15,7 +15,7 @@ export const T = {
       intro: "Clarity comes before complexity. Depth comes before speed. Meaning comes before recognition.",
       btnProjects: "Projects",
       btnEmotionDemo: "Emotion Recognition with MobileNetV2",
-      btnCV: "Download CV",
+      btnCV: "CV",
       btnContact: "Contact",
     },
     about: {
@@ -179,7 +179,7 @@ export const T = {
       intro: "Sự rõ ràng có trước sự phức tạp. Chiều sâu có trước tốc độ. Ý nghĩa có trước sự công nhận.",
       btnProjects: "Dự án",
       btnEmotionDemo: "Nhận diện cảm xúc với MobileNetV2",
-      btnCV: "Tải CV",
+      btnCV: "CV",
       btnContact: "Liên hệ",
     },
     about: {

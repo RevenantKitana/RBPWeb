@@ -60,12 +60,14 @@ export function HeroSection({ lang }: { lang: Lang }) {
             >
               {t.btnProjects}
             </button>
-            <button
-              onClick={() => scrollTo("emotion-demo")}
-              className="px-6 py-2.5 bg-white/[0.08] border border-white/[0.16] text-foreground/95 rounded-xl text-sm font-medium hover:bg-white/[0.12] transition-colors shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
+            <a
+              href="https://drive.google.com/drive/folders/1ib3nmsbPNqaFF4pI3NY7iWDVRXbjGnYw?usp=sharing"
+              target="_blank"
+              rel="noreferrer"
+              className="px-6 py-2.5 bg-white/[0.08] border border-white/[0.16] text-foreground/95 rounded-xl text-sm font-medium hover:bg-white/[0.12] transition-colors shadow-[0_8px_24px_rgba(0,0,0,0.18)] inline-flex items-center justify-center"
             >
-              {t.btnEmotionDemo}
-            </button>
+              {t.btnCV}
+            </a>
             <button
               onClick={() => scrollTo("contact")}
               className="px-6 py-2.5 border border-border text-foreground/90 rounded-xl text-sm font-medium hover:border-primary/40 hover:text-foreground/95 transition-all shadow-[0_8px_24px_rgba(0,0,0,0.16)]"
