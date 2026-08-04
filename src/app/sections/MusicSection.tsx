@@ -374,9 +374,9 @@ export function MusicSection({ lang }: { lang: Lang }) {
                   </div>
                 )}
               </div>
-              <div className="p-4">
-                <p className="text-sm font-medium text-foreground/90">{activeVideo?.title ?? "Video"}</p>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              <div className="p-4 min-w-0">
+                <p className="text-sm font-medium text-foreground/90 truncate">{activeVideo?.title ?? "Video"}</p>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed truncate">
                   {activeVideo?.description ?? "Đang phát video YouTube được chọn."}
                 </p>
               </div>
@@ -431,10 +431,10 @@ export function MusicSection({ lang }: { lang: Lang }) {
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground/90 leading-snug line-clamp-2">
+                          <p className="text-sm font-medium text-foreground/90 leading-snug truncate">
                             {video.title}
                           </p>
-                          <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed line-clamp-2">
+                          <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed truncate">
                             {video.description}
                           </p>
                         </div>

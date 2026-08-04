@@ -258,7 +258,7 @@ export function AudioPlayer({
   };
 
   return (
-    <GlassCard className="flex flex-col sm:flex-row gap-3 p-3 sm:p-4 items-start sm:items-center overflow-hidden" hover>
+    <GlassCard className="flex flex-row items-center gap-3 p-3 sm:p-4 overflow-hidden" hover>
       {audioReady ? <audio ref={audioRef} src={src} preload="none" /> : null}
       <button
         onClick={toggle}
@@ -271,7 +271,7 @@ export function AudioPlayer({
           <Play size={14} className="text-primary ml-0.5" />
         )}
       </button>
-      <div className="flex-1 min-w-0 w-full">
+      <div className="flex-1 min-w-0">
         <p className="font-medium text-foreground/90 text-sm leading-tight truncate">{resolvedTitle}</p>
         <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed truncate">
           {[resolvedArtist, resolvedAlbum].filter(Boolean).join(" • ") || genre}
