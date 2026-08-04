@@ -53,7 +53,7 @@ export default function App() {
   const resumeBgmTimeout = useRef<number | null>(null);
   const intentionalPauseRef = useRef(false);
   const youtubePlaybackActiveRef = useRef(false);
-  const mediaPlaybackCountRef = useRef(0);
+  const mediaPlaybackStateRef = useRef({ audio: false, youtube: false });
   const backgroundAsset = selectedBackground
     ? availableBackgrounds.find((asset) => asset.src === selectedBackground) ?? availableBackgrounds[0] ?? null
     : availableBackgrounds[0] ?? null;
@@ -198,9 +198,11 @@ export default function App() {
   };
 
   const pauseBgmForMedia = (source: "audio" | "youtube") => {
-    mediaPlaybackCountRef.current += 1;
+    if (mediaPlaybackStateRef.current[source]) return;
+
+    mediaPlaybackStateRef.current[source] = true;
     intentionalPauseRef.current = true;
-    youtubePlaybackActiveRef.current = source === "youtube";
+    youtubePlaybackActiveRef.current = mediaPlaybackStateRef.current.youtube;
 
     const el = audioRef.current;
     if (el && !el.paused) {
@@ -212,9 +214,13 @@ export default function App() {
     }
   };
 
-  const resumeBgmAfterMedia = () => {
-    mediaPlaybackCountRef.current = Math.max(0, mediaPlaybackCountRef.current - 1);
-    if (mediaPlaybackCountRef.current > 0) return;
+  const resumeBgmAfterMedia = (source: "audio" | "youtube") => {
+    if (!mediaPlaybackStateRef.current[source]) return;
+
+    mediaPlaybackStateRef.current[source] = false;
+    youtubePlaybackActiveRef.current = mediaPlaybackStateRef.current.youtube;
+
+    if (mediaPlaybackStateRef.current.audio || mediaPlaybackStateRef.current.youtube) return;
 
     if (!musicOn || document.visibilityState === "hidden") return;
 
@@ -242,7 +248,7 @@ export default function App() {
       if (detail.playing) {
         pauseBgmForMedia("audio");
       } else {
-        resumeBgmAfterMedia();
+        resumeBgmAfterMedia("audio");
       }
     };
 
@@ -254,7 +260,7 @@ export default function App() {
       if (detail.playing) {
         pauseBgmForMedia("youtube");
       } else {
-        resumeBgmAfterMedia();
+        resumeBgmAfterMedia("youtube");
       }
     };
 
