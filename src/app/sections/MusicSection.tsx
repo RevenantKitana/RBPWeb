@@ -101,9 +101,11 @@ export function MusicSection({ lang }: { lang: Lang }) {
     const target = audioPlayerRefs.current[0] ?? mediaSectionRef.current;
     if (!target) return;
 
-    const headerOffset = 88;
-    const elementTop = target.getBoundingClientRect().top + window.scrollY - headerOffset;
-    window.scrollTo({ top: elementTop, behavior: "smooth" });
+    const rect = target.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const top = window.scrollY + rect.top - (viewportHeight / 2) + (rect.height / 2);
+
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
   };
 
   useEffect(() => {

@@ -6,8 +6,16 @@ import { FadeIn } from "@/app/components/shared/FadeIn";
 
 export function HeroSection({ lang }: { lang: Lang }) {
   const t = T[lang].hero;
-  const scrollTo = (id: string) =>
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  const scrollTo = (id: string) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+
+    const rect = element.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const top = window.scrollY + rect.top - (viewportHeight / 2) + (rect.height / 2);
+
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  };
 
   return (
     <section

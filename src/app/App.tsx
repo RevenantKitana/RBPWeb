@@ -10,6 +10,7 @@ import { ArticlesSection } from "@/app/sections/ArticlesSection";
 import { BiographySection } from "@/app/sections/BiographySection";
 import { ContactSection } from "@/app/sections/ContactSection";
 import { getMediaAssets } from "@/app/data/asset";
+import { attachHashAnchorScroll } from "@/app/lib/scroll";
 
 type BackgroundAsset = {
   type: "image" | "video";
@@ -335,6 +336,10 @@ export default function App() {
       window.removeEventListener("pageshow", onFocus);
     };
   }, [currentBgmTrack, musicOn]);
+
+  useEffect(() => {
+    return attachHashAnchorScroll();
+  }, []);
 
   useEffect(() => {
     const ids = ["hero", "about", "software", "music", "articles", "biography", "contact"];
