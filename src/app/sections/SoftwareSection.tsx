@@ -17,6 +17,48 @@ export function SoftwareSection({ lang }: { lang: Lang }) {
   const [skillIndex, setSkillIndex] = useState(0);
   const [isSkillPaused, setIsSkillPaused] = useState(false);
   const [isEmotionModalOpen, setIsEmotionModalOpen] = useState(false);
+  const [isEmotionServiceAvailable, setIsEmotionServiceAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+
+    fetch("https://dectect-emotion-production.onrender.com/health", {
+      signal: controller.signal,
+      headers: {
+        Accept: "application/json",
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Health check failed with status ${response.status}`);
+        }
+
+        const payload = (await response.json()) as { status?: string; model_path?: string };
+        const isHealthy = payload.status === "ok" && typeof payload.model_path === "string" && payload.model_path.trim().length > 0;
+
+        if (isMounted) {
+          setIsEmotionServiceAvailable(isHealthy);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setIsEmotionServiceAvailable(false);
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          window.clearTimeout(timeoutId);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
 
   useEffect(() => {
     if (isSkillPaused) return;
@@ -318,19 +360,59 @@ export function SoftwareSection({ lang }: { lang: Lang }) {
             </FadeIn>
             <FadeIn delay={0.2}>
               <div id="emotion-demo">
-                <Dialog open={isEmotionModalOpen} onOpenChange={(open) => {
-                  setIsEmotionModalOpen(open);
-                }}>
-                <DialogTrigger asChild>
-                  <GlassCard className="cursor-pointer p-6 flex flex-col h-full min-h-0 hover:border-white/20 hover:bg-white/10 transition">
+                {isEmotionServiceAvailable ? (
+                  <Dialog open={isEmotionModalOpen} onOpenChange={(open) => {
+                    setIsEmotionModalOpen(open);
+                  }}>
+                    <DialogTrigger asChild>
+                      <GlassCard className="cursor-pointer p-6 flex flex-col h-full min-h-0 hover:border-white/20 hover:bg-white/10 transition">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Camera size={15} className="text-primary" />
+                          <p className="font-medium text-foreground/90 text-sm">{t.emotionFeatureTitle}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{t.emotionFeatureSub}</p>
+                        <div className="mt-4 rounded-xl border border-primary/20 bg-primary/[0.08] p-3 flex items-center justify-between gap-3">
+                          <span className="text-xs text-primary">{t.emotionFeatureStatus}</span>
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-primary/80">{t.emotionModalOpenLabel}</span>
+                        </div>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {["Webcam", "Image input", "7 emotion states"].map((item) => (
+                            <span key={item} className="text-[10px] px-2 py-1 rounded-full bg-white/[0.05] text-muted-foreground border border-white/[0.08]">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-auto pt-4 text-xs text-foreground/60">
+                          {t.emotionFeatureFooter}
+                        </div>
+                      </GlassCard>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-5xl p-0 sm:p-0">
+                      <DialogHeader className="border-b border-white/10 px-6 py-4">
+                        <DialogTitle>{t.emotionFeatureTitle}</DialogTitle>
+                        <DialogDescription className="mt-2 text-sm text-muted-foreground">
+                          {t.emotionFeatureSub}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="p-6">
+                        <EmotionLiveCard lang={lang} open={isEmotionModalOpen} />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                ) : (
+                  <GlassCard className="cursor-not-allowed opacity-70 p-6 flex flex-col h-full min-h-0 border-white/10">
                     <div className="flex items-center gap-2 mb-3">
-                      <Camera size={15} className="text-primary" />
+                      <Camera size={15} className="text-muted-foreground" />
                       <p className="font-medium text-foreground/90 text-sm">{t.emotionFeatureTitle}</p>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">{t.emotionFeatureSub}</p>
-                    <div className="mt-4 rounded-xl border border-primary/20 bg-primary/[0.08] p-3 flex items-center justify-between gap-3">
-                      <span className="text-xs text-primary">{t.emotionFeatureStatus}</span>
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-primary/80">{t.emotionModalOpenLabel}</span>
+                    <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.04] p-3 flex items-center justify-between gap-3">
+                      <span className="text-xs text-muted-foreground">
+                        {lang === "vi" ? "Không khả dụng" : "Unavailable"}
+                      </span>
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground/80">
+                        {lang === "vi" ? "Không thể mở" : "Unavailable"}
+                      </span>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
                       {["Webcam", "Image input", "7 emotion states"].map((item) => (
@@ -340,23 +422,11 @@ export function SoftwareSection({ lang }: { lang: Lang }) {
                       ))}
                     </div>
                     <div className="mt-auto pt-4 text-xs text-foreground/60">
-                      {t.emotionFeatureFooter}
+                      {lang === "vi" ? "Dịch vụ nhận diện cảm xúc hiện đang không phản hồi." : "The emotion recognition service is currently unavailable."}
                     </div>
                   </GlassCard>
-                </DialogTrigger>
-                <DialogContent className="max-w-5xl p-0 sm:p-0">
-                  <DialogHeader className="border-b border-white/10 px-6 py-4">
-                    <DialogTitle>{t.emotionFeatureTitle}</DialogTitle>
-                    <DialogDescription className="mt-2 text-sm text-muted-foreground">
-                      {t.emotionFeatureSub}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="p-6">
-                    <EmotionLiveCard lang={lang} open={isEmotionModalOpen} />
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+                )}
+              </div>
             </FadeIn>
           </div>
         </div>
