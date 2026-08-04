@@ -356,6 +356,7 @@ export function SoftwareSection({ lang }: { lang: Lang }) {
                   </div>
                 </DialogContent>
               </Dialog>
+            </div>
             </FadeIn>
           </div>
         </div>

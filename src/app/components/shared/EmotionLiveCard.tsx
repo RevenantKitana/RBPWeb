@@ -70,7 +70,7 @@ export function EmotionLiveCard({ lang, open }: { lang: Lang; open: boolean }) {
   const label = getStatusLabel(status, open, T[lang]);
 
   return (
-    <GlassCard className="p-6 flex flex-col h-full min-h-[460px] gap-4">
+    <GlassCard className="p-6 flex flex-col h-full min-h-[360px] gap-4 sm:min-h-[460px]">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Camera size={16} className="text-primary" />
@@ -97,7 +97,7 @@ export function EmotionLiveCard({ lang, open }: { lang: Lang; open: boolean }) {
         <div className="relative aspect-[4/3] w-full bg-slate-950">
           <video
             ref={videoRef}
-            className="h-full w-full object-fill"
+            className="h-full w-full object-cover"
             muted
             playsInline
             autoPlay
