@@ -35,8 +35,7 @@ const MEDIA_SOURCE_PATHS = [
   "/background/%5B16%2B%5D%20TamamoNoMae%20-%20Dragon%20Traveler.mp4",
   "/background/%5B16%2B%5D%20Titania%20-%20Dragon%20Traveler.mp4",
 // Demo Audio
-  "/audio/demo/revek%20ft%20Thế%20Phương%20-%20Đi%20để%20trở%20về.mp3",
-  "/audio/demo/Tai%20sinh%20(Tung%20duong)%20x%20Love%20again%20(alok).mp3",
+  "/audio/demo/demo%20tim%20em.mp3",
   "/audio/demo/Thuy%20chung.mp3",
   "/audio/demo/tra%20lai%20thanh%20xuan%20cho%20em.mp3",
   "/audio/demo/yeu%20dung%20so%20dau.mp3",
