@@ -35,10 +35,9 @@ const MEDIA_SOURCE_PATHS = [
   "/background/%5B16%2B%5D%20TamamoNoMae%20-%20Dragon%20Traveler.mp4",
   "/background/%5B16%2B%5D%20Titania%20-%20Dragon%20Traveler.mp4",
 // Demo Audio
+  "/audio/demo/xin%20%C4%91%E1%BB%ABng%20r%E1%BB%9Di%20xa%20anh.mp3",
   "/audio/demo/ngay%20hai%20ta%20sat%20vai.mp3",
   "/audio/demo/demo%20tim%20em.mp3",
-  "/audio/demo/Thuy%20chung.mp3",
-  "/audio/demo/tra%20lai%20thanh%20xuan%20cho%20em.mp3",
   "/audio/demo/yeu%20dung%20so%20dau.mp3",
 // BGM Audio
   "/audio/bgm/[Wadanohara%20and%20the%20Great%20Blue%20Sea]%20127%20-%20Honeymoon.mp3",
