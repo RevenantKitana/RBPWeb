@@ -26,7 +26,7 @@ export const YOUTUBE_CARDS: YoutubeCard[] = [
   {
     title: "Xin đừng rời xa anh (Revek Remix)",
     description: "Xin đừng rời xa Liên, đừng để lệ hoen mi Liên...",
-    link: "https://youtu.be/GuQDnILapc0?si=AXYTVQMBKX57gYaM",
+    link: "https://youtu.be/nf57AhFLgIM?si=DbnRpE_MTSnX3JE0",
   },
   {
     title: "EM NÊN DỪNG LẠI (Revek Remix · Melodic House)",
